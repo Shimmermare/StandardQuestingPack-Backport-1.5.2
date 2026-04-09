@@ -1,6 +1,7 @@
 package bq_standard.client.gui.tasks;
 
 import betterquesting.api.api.QuestingAPI;
+import betterquesting.api.misc.ICallback;
 import betterquesting.api.properties.NativeProps;
 import betterquesting.api.questing.IQuest;
 import betterquesting.api.utils.BigItemStack;
@@ -63,7 +64,12 @@ public class PanelTaskRetrieval extends CanvasEmpty
             }
     
             PanelItemSlot slot = new PanelItemSlot(new GuiRectangle(0, i * 32, 32, 32, 0), -1, stack, false, true);
-            if(BQ_Standard.hasNEI) slot.setCallback(value -> lookupRecipe(value.getBaseStack()));
+            if(BQ_Standard.hasNEI) slot.setCallback(new ICallback<BigItemStack>() {
+                @Override
+                public void setValue(BigItemStack value) {
+                    lookupRecipe(value.getBaseStack());
+                }
+            });
             cvList.addPanel(slot);
             
             StringBuilder sb = new StringBuilder();

@@ -8,6 +8,7 @@ import betterquesting.api.questing.IQuestLineDatabase;
 import betterquesting.api.utils.FileExtensionFilter;
 import betterquesting.api.utils.JsonHelper;
 import betterquesting.api.utils.NBTConverter;
+import betterquesting.backport.NbtUtils;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 
@@ -49,20 +50,20 @@ public class NativeFileImporter implements IImporter
 			if(selected == null || !selected.exists()) continue;
 			
 			NBTTagCompound nbt = NBTConverter.JSONtoNBT_Object(JsonHelper.ReadFromFile(selected), new NBTTagCompound(), true);
-			HashMap<Integer, Integer> remappedIDs = readQuests(nbt.getTagList("questDatabase", 10), questDB);
-			readQuestLines(nbt.getTagList("questLines", 10), lineDB, remappedIDs);
+			HashMap<Integer, Integer> remappedIDs = readQuests(NbtUtils.getTagList(nbt,"questDatabase", 10), questDB);
+			readQuestLines(NbtUtils.getTagList(nbt,"questLines", 10), lineDB, remappedIDs);
 		}
 	}
 	
 	private HashMap<Integer,Integer> readQuests(NBTTagList json, IQuestDatabase questDB)
     {
-        HashMap<Integer,Integer> remappedIDs = new HashMap<>();
-        List<IQuest> loadedQuests = new ArrayList<>();
+        HashMap<Integer,Integer> remappedIDs = new HashMap<Integer,Integer>();
+        List<IQuest> loadedQuests = new ArrayList<IQuest>();
         
         for(int i = 0; i < json.tagCount(); i++)
 		{
-		    NBTTagCompound qTag = json.getCompoundTagAt(i);
-		    int oldID = qTag.hasKey("questID", 99) ? qTag.getInteger("questID") : -1;
+		    NBTTagCompound qTag = NbtUtils.getCompoundTagAt(json, i);
+		    int oldID = NbtUtils.hasKey(qTag,"questID", 99) ? qTag.getInteger("questID") : -1;
 		    if(oldID < 0) continue;
 		    
             
@@ -92,16 +93,16 @@ public class NativeFileImporter implements IImporter
     {
         for(int i = 0; i < json.tagCount(); i++)
 		{
-			NBTTagCompound jql = (NBTTagCompound)json.getCompoundTagAt(i).copy();
+			NBTTagCompound jql = (NBTTagCompound)NbtUtils.getCompoundTagAt(json, i).copy();
 			
-			if(jql.hasKey("quests", 9))
+			if(NbtUtils.hasKey(jql,"quests", 9))
             {
-                NBTTagList qList = jql.getTagList("quests", 10);
+                NBTTagList qList = NbtUtils.getTagList(jql,"quests", 10);
                 for(int n = 0; n < qList.tagCount(); n++)
                 {
-			        NBTTagCompound qTag = qList.getCompoundTagAt(n);
+			        NBTTagCompound qTag = NbtUtils.getCompoundTagAt(qList, n);
                     
-                    int oldID = qTag.hasKey("id", 99) ? qTag.getInteger("id") : -1;
+                    int oldID = NbtUtils.hasKey(qTag,"id", 99) ? qTag.getInteger("id") : -1;
                     if(oldID < 0) continue;
                     Integer qID = remappeIDs.get(oldID);
                     qTag.setInteger("id", qID);

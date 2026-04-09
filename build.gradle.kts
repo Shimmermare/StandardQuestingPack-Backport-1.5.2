@@ -22,17 +22,12 @@ val modBaseName: String by project
 val jdkVersion = 11
 val compileTargetVersion = 6
 
-val shadowInclude by configurations.creating
-
 dependencies {
     minecraft(libs.minecraft)
     forge(variantOf(libs.forge) { classifier("universal"); artifactType("zip") })
     mappings(variantOf(libs.forge) { classifier("src"); artifactType("zip") })
 
     compileOnly(libs.jsr305)
-
-    shadowInclude(libs.gson)
-    compileOnly(libs.gson)
 
     modImplementation(files("libs/BetterQuesting-3.0.328-dev.jar"))
 
@@ -68,14 +63,6 @@ tasks {
     jar {
         archiveBaseName.set(modBaseName)
         archiveClassifier.set("core")
-    }
-    shadowJar {
-        configurations = listOf(shadowInclude)
-        relocate("com.google.gson", "betterquesting.shadow.com.google.gson")
-        archiveClassifier.set("dev")
-    }
-    remapJarForRelease {
-        dependsOn("shadowJar")
     }
 }
 

@@ -5,16 +5,17 @@ import betterquesting.api.api.QuestingAPI;
 import betterquesting.api.properties.NativeProps;
 import betterquesting.api.utils.BigItemStack;
 import betterquesting.api2.utils.QuestTranslation;
+import betterquesting.backport.NbtUtils;
 import bq_standard.core.BQ_Standard;
 import bq_standard.network.handlers.NetLootClaim;
 import bq_standard.rewards.loot.LootGroup;
 import bq_standard.rewards.loot.LootRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -28,11 +29,11 @@ import java.util.List;
 
 public class ItemLootChest extends Item
 {
-	public ItemLootChest()
+	public ItemLootChest(int id)
 	{
+        super(id);
 		this.setMaxStackSize(1);
 		this.setUnlocalizedName("bq_standard.loot_chest");
-		this.setTextureName("bq_standard:loot_chest");
 		this.setCreativeTab(QuestingAPI.getAPI(ApiReference.CREATIVE_TAB));
 	}
 
@@ -53,13 +54,13 @@ public class ItemLootChest extends Item
             NBTTagCompound tag = stack.getTagCompound();
             if(tag == null) tag = new NBTTagCompound();
             
-	    	List<BigItemStack> lootItems = new ArrayList<>();
+	    	List<BigItemStack> lootItems = new ArrayList<BigItemStack>();
             String lootName = tag.getString("fixedLootName");
-            NBTTagList lootList = tag.getTagList("fixedLootList", 10);
+            NBTTagList lootList = NbtUtils.getTagList(tag,"fixedLootList", 10);
             
             for(int i = 0; i < lootList.tagCount(); i++)
             {
-                lootItems.add(BigItemStack.loadItemStackFromNBT(lootList.getCompoundTagAt(i)));
+                lootItems.add(BigItemStack.loadItemStackFromNBT(NbtUtils.getCompoundTagAt(lootList, i)));
             }
 	    	
 	    	boolean invoChanged = false;
@@ -79,7 +80,7 @@ public class ItemLootChest extends Item
 	    	
 	    	if(invoChanged)
             {
-	    		player.inventory.markDirty();
+	    		player.inventory.onInventoryChanged();
 	    		player.inventoryContainer.detectAndSendChanges();
             }
 	    	
@@ -92,9 +93,9 @@ public class ItemLootChest extends Item
     	        return stack;
             }
             
-            String loottable = (stack.getTagCompound() != null && stack.getTagCompound().hasKey("loottable", 8)) ? stack.getTagCompound().getString("loottable") : "dungeonChest";
+            String loottable = (stack.getTagCompound() != null && NbtUtils.hasKey(stack.getTagCompound(),"loottable", 8)) ? stack.getTagCompound().getString("loottable") : "dungeonChest";
             
-	    	List<BigItemStack> loot = new ArrayList<>();
+	    	List<BigItemStack> loot = new ArrayList<BigItemStack>();
 	    	for(int n = 1 + player.getRNG().nextInt(7); n > 0; n--)
             {
                 loot.add(new BigItemStack(ChestGenHooks.getOneItem(loottable, player.getRNG())));
@@ -117,7 +118,7 @@ public class ItemLootChest extends Item
 	    	
 	    	if(invoChanged)
             {
-	    		player.inventory.markDirty();
+	    		player.inventory.onInventoryChanged();
 	    		player.inventoryContainer.detectAndSendChanges();
             }
 	    	
@@ -133,7 +134,7 @@ public class ItemLootChest extends Item
     	{
     	    float rarity = stack.getItemDamage() == 101 ? itemRand.nextFloat() : MathHelper.clamp_int(stack.getItemDamage(), 0, 100)/100F;
     		LootGroup group = LootRegistry.INSTANCE.getWeightedGroup(rarity, itemRand);
-	    	List<BigItemStack> loot = new ArrayList<>();
+	    	List<BigItemStack> loot = new ArrayList<BigItemStack>();
 	    	String title = "No Loot Setup";
 	    	
 	    	if(group != null)
@@ -160,7 +161,7 @@ public class ItemLootChest extends Item
 	    	
 	    	if(invoChanged)
             {
-	    		player.inventory.markDirty();
+	    		player.inventory.onInventoryChanged();
 	    		player.inventoryContainer.detectAndSendChanges();
             }
 	    	
@@ -183,7 +184,7 @@ public class ItemLootChest extends Item
 	@Override
 	@SideOnly(Side.CLIENT)
     @SuppressWarnings("unchecked")
-    public void getSubItems(Item item, CreativeTabs tab, List list)
+    public void getSubItems(int id, CreativeTabs tab, List list)
     {
         if(tab != CreativeTabs.tabAllSearch && tab != this.getCreativeTab()) return;
         if(subItems != null) // CACHED ITEMS
@@ -192,7 +193,7 @@ public class ItemLootChest extends Item
             return;
         }
         
-        subItems = new ArrayList<>();
+        subItems = new ArrayList<ItemStack>();
         
         // NORMAL RARITY
         NBTTagCompound tag = new NBTTagCompound();
@@ -224,7 +225,7 @@ public class ItemLootChest extends Item
         tag = new NBTTagCompound();
         tag.setBoolean("hideLootInfo", true);
         NBTTagList tagList = new NBTTagList();
-        tagList.appendTag(new BigItemStack(Blocks.stone).writeToNBT(new NBTTagCompound()));
+        tagList.appendTag(new BigItemStack(Block.stone).writeToNBT(new NBTTagCompound()));
         ItemStack fixedLootStack = new ItemStack(this, 1, 104);
         tag.setTag("fixedLootList", tagList);
         tag.setString("fixedLootName", "Item Set");
@@ -260,7 +261,7 @@ public class ItemLootChest extends Item
         {
             if(tag == null) return;
             tooltip.add(QuestTranslation.translate("bq_standard.tooltip.fixed_loot", tag.getString("fixedLootName")));
-            tooltip.add(QuestTranslation.translate("bq_standard.tooltip.fixed_loot_size", tag.getTagList("fixedLootList", 10).tagCount()));
+            tooltip.add(QuestTranslation.translate("bq_standard.tooltip.fixed_loot_size", NbtUtils.getTagList(tag,"fixedLootList", 10).tagCount()));
         } else if(stack.getItemDamage() == 103)
         {
             if(tag == null) return;

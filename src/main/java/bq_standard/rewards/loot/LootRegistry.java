@@ -3,14 +3,12 @@ package bq_standard.rewards.loot;
 import betterquesting.api2.storage.DBEntry;
 import betterquesting.api2.storage.INBTPartial;
 import betterquesting.api2.storage.SimpleDatabase;
+import betterquesting.backport.NbtUtils;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 public class LootRegistry extends SimpleDatabase<LootGroup> implements INBTPartial<NBTTagCompound, Integer>
 {
@@ -20,7 +18,13 @@ public class LootRegistry extends SimpleDatabase<LootGroup> implements INBTParti
     
     public static final LootRegistry INSTANCE = new LootRegistry();
     
-    private final Comparator<DBEntry<LootGroup>> groupSorter = Comparator.comparingInt(o -> o.getValue().weight);
+    private final Comparator<DBEntry<LootGroup>> groupSorter = new Comparator<DBEntry<LootGroup>>() {
+        @Override
+        public int compare(DBEntry<LootGroup> o1, DBEntry<LootGroup> o2) {
+            return Integer.valueOf(o1.getValue().weight).compareTo(o2.getValue().weight);
+        }
+    };
+
 	public boolean updateUI = false;
 	
 	public synchronized LootGroup createNew(int id)
@@ -57,8 +61,8 @@ public class LootRegistry extends SimpleDatabase<LootGroup> implements INBTParti
 		float r = rand.nextFloat() * total/4F + weight*total*0.75F;
 		int cnt = 0;
 		
-		List<DBEntry<LootGroup>> sorted = new ArrayList<>(getEntries());
-		sorted.sort(groupSorter);
+		List<DBEntry<LootGroup>> sorted = new ArrayList<DBEntry<LootGroup>>(getEntries());
+		Collections.sort(sorted, groupSorter);
 		
 		for(DBEntry<LootGroup> entry : sorted)
 		{
@@ -90,13 +94,13 @@ public class LootRegistry extends SimpleDatabase<LootGroup> implements INBTParti
     {
 		if(!merge) this.reset();
 		
-		List<LootGroup> legacyGroups = new ArrayList<>();
+		List<LootGroup> legacyGroups = new ArrayList<LootGroup>();
 		
-		NBTTagList list = tag.getTagList("groups", 10);
+		NBTTagList list = NbtUtils.getTagList(tag,"groups", 10);
 		for(int i = 0; i < list.tagCount(); i++)
 		{
-			NBTTagCompound entry = list.getCompoundTagAt(i);
-			int id = entry.hasKey("ID", 99) ? entry.getInteger("ID") : -1;
+			NBTTagCompound entry = NbtUtils.getCompoundTagAt(list, i);
+			int id = NbtUtils.hasKey(entry,"ID", 99) ? entry.getInteger("ID") : -1;
 			
 			LootGroup group = getValue(id);
 			if(group == null) group = createNew(id);

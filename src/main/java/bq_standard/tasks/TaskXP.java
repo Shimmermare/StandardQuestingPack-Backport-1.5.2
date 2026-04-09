@@ -5,6 +5,7 @@ import betterquesting.api2.client.gui.misc.IGuiRect;
 import betterquesting.api2.client.gui.panels.IGuiPanel;
 import betterquesting.api2.storage.DBEntry;
 import betterquesting.api2.utils.ParticipantInfo;
+import betterquesting.backport.NbtUtils;
 import bq_standard.XPHelper;
 import bq_standard.client.gui.tasks.PanelTaskXP;
 import bq_standard.core.BQ_Standard;
@@ -13,8 +14,8 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTTagString;
-import net.minecraft.util.ResourceLocation;
-import org.apache.logging.log4j.Level;
+import betterquesting.backport.ResourceLocation;
+import java.util.logging.Level;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -22,8 +23,8 @@ import java.util.*;
 
 public class TaskXP implements ITaskTickable
 {
-	private final Set<UUID> completeUsers = new TreeSet<>();
-	private final TreeMap<UUID, Long> userProgress = new TreeMap<>();
+	private final Set<UUID> completeUsers = new TreeSet<UUID>();
+	private final TreeMap<UUID, Long> userProgress = new TreeMap<UUID, Long>();
 	public boolean levels = true;
 	public int amount = 30;
 	public boolean consume = true;
@@ -123,7 +124,7 @@ public class TaskXP implements ITaskTickable
 	@Override
 	public void readFromNBT(NBTTagCompound nbt)
 	{
-		amount = nbt.hasKey("amount", 99) ? nbt.getInteger("amount") : 30;
+		amount = NbtUtils.hasKey(nbt,"amount", 99) ? nbt.getInteger("amount") : 30;
 		levels = nbt.getBoolean("isLevels");
 		consume = nbt.getBoolean("consume");
 	}
@@ -137,29 +138,29 @@ public class TaskXP implements ITaskTickable
             userProgress.clear();
         }
 		
-		NBTTagList cList = nbt.getTagList("completeUsers", 8);
+		NBTTagList cList = NbtUtils.getTagList(nbt,"completeUsers", 8);
 		for(int i = 0; i < cList.tagCount(); i++)
 		{
 			try
 			{
-				completeUsers.add(UUID.fromString(cList.getStringTagAt(i)));
+				completeUsers.add(UUID.fromString(NbtUtils.getStringTagAt(cList, i)));
 			} catch(Exception e)
 			{
-				BQ_Standard.logger.log(Level.ERROR, "Unable to load UUID for task", e);
+				BQ_Standard.logger.log(Level.SEVERE, "Unable to load UUID for task", e);
 			}
 		}
 		
-		NBTTagList pList = nbt.getTagList("userProgress", 10);
+		NBTTagList pList = NbtUtils.getTagList(nbt,"userProgress", 10);
 		for(int n = 0; n < pList.tagCount(); n++)
 		{
 			try
 			{
-                NBTTagCompound pTag = pList.getCompoundTagAt(n);
+                NBTTagCompound pTag = NbtUtils.getCompoundTagAt(pList, n);
                 UUID uuid = UUID.fromString(pTag.getString("uuid"));
                 userProgress.put(uuid, pTag.getLong("value"));
 			} catch(Exception e)
 			{
-				BQ_Standard.logger.log(Level.ERROR, "Unable to load user progress for task", e);
+				BQ_Standard.logger.log(Level.SEVERE, "Unable to load user progress for task", e);
 			}
 		}
 	}
@@ -172,9 +173,9 @@ public class TaskXP implements ITaskTickable
 		
 		if(users != null)
         {
-            users.forEach((uuid) -> {
+            for (UUID uuid : users) {
                 if(completeUsers.contains(uuid)) jArray.appendTag(new NBTTagString(uuid.toString()));
-                
+
                 Long data = userProgress.get(uuid);
                 if(data != null)
                 {
@@ -183,17 +184,21 @@ public class TaskXP implements ITaskTickable
                     pJson.setLong("value", data);
                     progArray.appendTag(pJson);
                 }
-            });
+            }
         } else
         {
-            completeUsers.forEach((uuid) -> jArray.appendTag(new NBTTagString(uuid.toString())));
-            
-            userProgress.forEach((uuid, data) -> {
+            for (UUID uuid : completeUsers) {
+                jArray.appendTag(new NBTTagString(uuid.toString()));
+            }
+
+            for (Map.Entry<UUID, Long> entry : userProgress.entrySet()) {
+                UUID uuid = entry.getKey();
+                long data = entry.getValue();
                 NBTTagCompound pJson = new NBTTagCompound();
-			    pJson.setString("uuid", uuid.toString());
+                pJson.setString("uuid", uuid.toString());
                 pJson.setLong("value", data);
                 progArray.appendTag(pJson);
-            });
+            }
         }
 		
 		nbt.setTag("completeUsers", jArray);

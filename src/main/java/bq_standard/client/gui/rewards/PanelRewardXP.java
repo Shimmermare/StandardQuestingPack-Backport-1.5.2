@@ -11,7 +11,7 @@ import betterquesting.api2.client.gui.resources.textures.ItemTexture;
 import betterquesting.api2.client.gui.themes.presets.PresetColor;
 import betterquesting.api2.utils.QuestTranslation;
 import bq_standard.rewards.RewardXP;
-import net.minecraft.init.Items;
+import net.minecraft.item.Item;
 import net.minecraft.util.EnumChatFormatting;
 import org.lwjgl.util.vector.Vector4f;
 
@@ -30,7 +30,7 @@ public class PanelRewardXP extends CanvasEmpty
     {
         super.initPanel();
         
-        this.addPanel(new PanelGeneric(new GuiTransform(new Vector4f(0.4F, 0.5F, 0.4F, 0.5F), -32, -16, 32, 32, 0), new ItemTexture(new BigItemStack(Items.experience_bottle))));
+        this.addPanel(new PanelGeneric(new GuiTransform(new Vector4f(0.4F, 0.5F, 0.4F, 0.5F), -32, -16, 32, 32, 0), new ItemTexture(new BigItemStack(Item.expBottle))));
         
 		String txt2;
 		

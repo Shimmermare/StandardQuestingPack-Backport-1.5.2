@@ -10,15 +10,15 @@ import bq_standard.AdminExecute;
 import bq_standard.client.gui.rewards.PanelRewardCommand;
 import bq_standard.handlers.EventHandler;
 import bq_standard.rewards.factory.FactoryRewardCommand;
-import io.netty.buffer.ByteBuf;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.command.server.CommandBlockLogic;
+import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ChunkCoordinates;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.World;
+import betterquesting.backport.ResourceLocation;
+
+import java.util.concurrent.Callable;
 
 public class RewardCommand implements IReward
 {
@@ -55,12 +55,22 @@ public class RewardCommand implements IReward
 		
 		if(viaPlayer)
 		{
-			EventHandler.scheduleServerTask(() -> server.getCommandManager().executeCommand(new AdminExecute(player), finCom));
+			EventHandler.scheduleServerTask(new Callable<Integer>() {
+                @Override
+                public Integer call() throws Exception {
+                    return server.getCommandManager().executeCommand(new AdminExecute(player), finCom);
+                }
+            });
 		} else
 		{
-			final RewardCommandSender cmdSender = new RewardCommandSender(player.worldObj, (int)player.posX, (int)player.posY, (int)player.posZ);
+			final RewardCommandSender cmdSender = new RewardCommandSender((int)player.posX, (int)player.posY, (int)player.posZ);
 			
-			EventHandler.scheduleServerTask(() -> server.getCommandManager().executeCommand(cmdSender, finCom));
+			EventHandler.scheduleServerTask(new Callable<Integer>() {
+                @Override
+                public Integer call() throws Exception {
+                    return server.getCommandManager().executeCommand(cmdSender, finCom);
+                }
+            });
 		}
 	}
 	
@@ -93,15 +103,13 @@ public class RewardCommand implements IReward
 		return null;
 	}
 	
-	public static class RewardCommandSender extends CommandBlockLogic
+	public static class RewardCommandSender implements ICommandSender
 	{
-		private final World world;
 		private final ChunkCoordinates blockLoc;
 		
-		private RewardCommandSender(World world, int x, int y, int z)
+		private RewardCommandSender(int x, int y, int z)
 	    {
 	    	blockLoc = new ChunkCoordinates(x, y, z);
-	    	this.world = world;
 	    }
      
 		@Override
@@ -111,32 +119,23 @@ public class RewardCommand implements IReward
 		}
   
 		@Override
-		public World getEntityWorld()
-		{
-			return world;
-		}
-  
-		@Override
-		public void func_145756_e()
-        {
-        
-        }
-        
-		@Override
-		public int func_145751_f()
-		{
-			return 0;
-		}
-  
-		@Override
-		public void func_145757_a(ByteBuf p_145757_1_)
-		{
-		}
-  
-		@Override
 	    public String getCommandSenderName()
 	    {
 	        return "BetterQuesting";
 	    }
-	}
+
+        @Override
+        public void sendChatToPlayer(String s) {
+        }
+
+        @Override
+        public boolean canCommandSenderUseCommand(int i, String s) {
+            return i <= 2;
+        }
+
+        @Override
+        public String translateString(String s, Object... objects) {
+            return s;
+        }
+    }
 }

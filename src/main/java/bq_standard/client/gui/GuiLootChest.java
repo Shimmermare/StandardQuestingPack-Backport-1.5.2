@@ -10,15 +10,14 @@ import betterquesting.api2.client.gui.panels.content.PanelTextBox;
 import betterquesting.api2.client.gui.resources.textures.IGuiTexture;
 import betterquesting.api2.utils.QuestTranslation;
 import bq_standard.client.theme.BQSTextures;
-import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.util.ResourceLocation;
+import betterquesting.backport.ResourceLocation;
 
 import java.util.List;
 
 public class GuiLootChest extends GuiScreenCanvas
 {
-    private static final ResourceLocation SND_OPEN = new ResourceLocation("randmom.chestopen");
+    private static final ResourceLocation SND_OPEN = new ResourceLocation("random.chestopen");
     private final String title;
     private final List<BigItemStack> rewards;
     
@@ -33,8 +32,8 @@ public class GuiLootChest extends GuiScreenCanvas
     public void initPanel()
     {
         super.initPanel();
-		
-		mc.getSoundHandler().playSound(PositionedSoundRecord.func_147674_a(SND_OPEN, 1.0F));
+
+        mc.sndManager.playSoundFX(SND_OPEN.getResourcePath(), 1.0F, 1.0F);
     
         this.addPanel(new PanelGeneric(new GuiTransform(GuiAlign.MID_CENTER, -64, 0, 128, 68, 0), BQSTextures.LOOT_CHEST.getTexture()));
         this.addPanel(new PanelTextBox(new GuiTransform(GuiAlign.MID_CENTER, -64, 40, 128, 56, -1), QuestTranslation.translate(title)).setAlignment(1));

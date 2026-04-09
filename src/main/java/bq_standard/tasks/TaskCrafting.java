@@ -11,6 +11,7 @@ import betterquesting.api2.client.gui.panels.IGuiPanel;
 import betterquesting.api2.storage.DBEntry;
 import betterquesting.api2.utils.ParticipantInfo;
 import betterquesting.api2.utils.Tuple2;
+import betterquesting.backport.NbtUtils;
 import bq_standard.client.gui.tasks.PanelTaskCrafting;
 import bq_standard.core.BQ_Standard;
 import bq_standard.tasks.factory.FactoryTaskCrafting;
@@ -19,9 +20,8 @@ import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.*;
-import net.minecraft.nbt.NBTBase.NBTPrimitive;
-import net.minecraft.util.ResourceLocation;
-import org.apache.logging.log4j.Level;
+import betterquesting.backport.ResourceLocation;
+import java.util.logging.Level;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -29,9 +29,9 @@ import java.util.*;
 
 public class TaskCrafting implements ITask
 {
-	private final Set<UUID> completeUsers = new TreeSet<>();
-	public final List<BigItemStack> requiredItems = new ArrayList<>();
-	public final TreeMap<UUID, int[]> userProgress = new TreeMap<>();
+	private final Set<UUID> completeUsers = new TreeSet<UUID>();
+	public final List<BigItemStack> requiredItems = new ArrayList<BigItemStack>();
+	public final TreeMap<UUID, int[]> userProgress = new TreeMap<UUID, int[]>();
 	public boolean partialMatch = true;
 	public boolean ignoreNBT = false;
 	public boolean allowAnvil = false;
@@ -65,7 +65,7 @@ public class TaskCrafting implements ITask
 	@Override
 	public void detect(ParticipantInfo pInfo, DBEntry<IQuest> quest)
 	{
-	    pInfo.ALL_UUIDS.forEach((uuid) -> {
+        for (UUID uuid : pInfo.ALL_UUIDS) {
             if(isComplete(uuid)) return;
             
             int[] tmp = getUsersProgress(uuid);
@@ -75,7 +75,7 @@ public class TaskCrafting implements ITask
                 if(tmp[i] < rStack.stackSize) return;
             }
             setComplete(uuid);
-        });
+        }
 	    
 	    pInfo.markDirtyParty(Collections.singletonList(quest.getID()));
 	}
@@ -112,10 +112,10 @@ public class TaskCrafting implements ITask
 			
 			if(ItemComparison.StackMatch(rStack.getBaseStack(), stack, !ignoreNBT, partialMatch) || ItemComparison.OreDictionaryMatch(rStack.getOreIngredient(), rStack.GetTagCompound(), stack, !ignoreNBT, partialMatch))
 			{
-			    progress.forEach((entry) -> {
-			        if(entry.getSecond()[index] >= rStack.stackSize) return;
-			        entry.getSecond()[index] = Math.min(entry.getSecond()[index] + stack.stackSize, rStack.stackSize);
-                });
+                for (Tuple2<UUID, int[]> entry : progress) {
+                    if(entry.getSecond()[index] >= rStack.stackSize) return;
+                    entry.getSecond()[index] = Math.min(entry.getSecond()[index] + stack.stackSize, rStack.stackSize);
+                }
 			    changed = true;
 			}
 		}
@@ -156,10 +156,10 @@ public class TaskCrafting implements ITask
 		if(nbt.hasKey("allowAnvil")) allowAnvil = nbt.getBoolean("allowAnvil");
 		
 		requiredItems.clear();
-		NBTTagList iList = nbt.getTagList("requiredItems", 10);
+		NBTTagList iList = NbtUtils.getTagList(nbt,"requiredItems", 10);
 		for(int i = 0; i < iList.tagCount(); i++)
 		{
-		    requiredItems.add(JsonHelper.JsonToItemStack(iList.getCompoundTagAt(i)));
+		    requiredItems.add(JsonHelper.JsonToItemStack(NbtUtils.getCompoundTagAt(iList, i)));
 		}
 	}
 	
@@ -172,42 +172,42 @@ public class TaskCrafting implements ITask
             userProgress.clear();
         }
 		
-		NBTTagList cList = nbt.getTagList("completeUsers", 8);
+		NBTTagList cList = NbtUtils.getTagList(nbt,"completeUsers", 8);
 		for(int i = 0; i < cList.tagCount(); i++)
 		{
 			try
 			{
-				completeUsers.add(UUID.fromString(cList.getStringTagAt(i)));
+				completeUsers.add(UUID.fromString(NbtUtils.getStringTagAt(cList, i)));
 			} catch(Exception e)
 			{
-				BQ_Standard.logger.log(Level.ERROR, "Unable to load UUID for task", e);
+				BQ_Standard.logger.log(Level.SEVERE, "Unable to load UUID for task", e);
 			}
 		}
 		
-		NBTTagList pList = nbt.getTagList("userProgress", 10);
+		NBTTagList pList = NbtUtils.getTagList(nbt,"userProgress", 10);
 		for(int n = 0; n < pList.tagCount(); n++)
 		{
-			NBTTagCompound pTag = pList.getCompoundTagAt(n);
+			NBTTagCompound pTag = NbtUtils.getCompoundTagAt(pList, n);
 			UUID uuid;
 			try
 			{
 				uuid = UUID.fromString(pTag.getString("uuid"));
 			} catch(Exception e)
 			{
-				BQ_Standard.logger.log(Level.ERROR, "Unable to load user progress for task", e);
+				BQ_Standard.logger.log(Level.SEVERE, "Unable to load user progress for task", e);
 				continue;
 			}
 			
 			int[] data = new int[requiredItems.size()];
-			List<NBTBase> dJson = NBTConverter.getTagList(pTag.getTagList("data", 3));
+			List<NBTBase> dJson = NBTConverter.getTagList(NbtUtils.getTagList(pTag,"data", 3));
 			for(int i = 0; i < data.length && i < dJson.size(); i++)
 			{
 				try
 				{
-					data[i] = ((NBTPrimitive)dJson.get(i)).func_150287_d();
+					data[i] = NbtUtils.intValue(dJson.get(i));
 				} catch(Exception e)
 				{
-					BQ_Standard.logger.log(Level.ERROR, "Incorrect task progress format", e);
+					BQ_Standard.logger.log(Level.SEVERE, "Incorrect task progress format", e);
 				}
 			}
 			
@@ -223,7 +223,7 @@ public class TaskCrafting implements ITask
 		
 		if(users != null)
         {
-            users.forEach((uuid) -> {
+            for (UUID uuid : users) {
                 if(completeUsers.contains(uuid)) jArray.appendTag(new NBTTagString(uuid.toString()));
                 
                 int[] data = userProgress.get(uuid);
@@ -232,23 +232,27 @@ public class TaskCrafting implements ITask
                     NBTTagCompound pJson = new NBTTagCompound();
                     pJson.setString("uuid", uuid.toString());
                     NBTTagList pArray = new NBTTagList(); // TODO: Why the heck isn't this just an int array?!
-                    for(int i : data) pArray.appendTag(new NBTTagInt(i));
+                    for(int i : data) pArray.appendTag(new NBTTagInt(null, i));
                     pJson.setTag("data", pArray);
                     progArray.appendTag(pJson);
                 }
-            });
+            }
         } else
         {
-            completeUsers.forEach((uuid) -> jArray.appendTag(new NBTTagString(uuid.toString())));
-            
-            userProgress.forEach((uuid, data) -> {
+            for (UUID uuid : completeUsers) {
+                jArray.appendTag(new NBTTagString(uuid.toString()));
+            }
+
+            for (Map.Entry<UUID, int[]> entry : userProgress.entrySet()) {
+                UUID uuid = entry.getKey();
+                int[] data = entry.getValue();
                 NBTTagCompound pJson = new NBTTagCompound();
-			    pJson.setString("uuid", uuid.toString());
+                pJson.setString("uuid", uuid.toString());
                 NBTTagList pArray = new NBTTagList(); // TODO: Why the heck isn't this just an int array?!
-                for(int i : data) pArray.appendTag(new NBTTagInt(i));
+                for(int i : data) pArray.appendTag(new NBTTagInt(null, i));
                 pJson.setTag("data", pArray);
                 progArray.appendTag(pJson);
-            });
+            }
         }
 		
 		nbt.setTag("completeUsers", jArray);
@@ -298,13 +302,17 @@ public class TaskCrafting implements ITask
 	private List<Tuple2<UUID, int[]>> getBulkProgress(@Nonnull List<UUID> uuids)
     {
         if(uuids.size() <= 0) return Collections.emptyList();
-        List<Tuple2<UUID, int[]>> list = new ArrayList<>();
-        uuids.forEach((key) -> list.add(new Tuple2<>(key, getUsersProgress(key))));
+        List<Tuple2<UUID, int[]>> list = new ArrayList<Tuple2<UUID, int[]>>();
+        for (UUID key : uuids) {
+            list.add(new Tuple2<UUID, int[]>(key, getUsersProgress(key)));
+        }
         return list;
     }
     
     private void setBulkProgress(@Nonnull List<Tuple2<UUID, int[]>> list)
     {
-        list.forEach((entry) -> setUserProgress(entry.getFirst(), entry.getSecond()));
+        for (Tuple2<UUID, int[]> entry : list) {
+            setUserProgress(entry.getFirst(), entry.getSecond());
+        }
     }
 }

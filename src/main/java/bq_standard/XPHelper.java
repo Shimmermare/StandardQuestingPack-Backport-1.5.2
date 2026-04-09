@@ -2,7 +2,7 @@ package bq_standard;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.network.play.server.S1FPacketSetExperience;
+import net.minecraft.network.packet.Packet43Experience;
 
 public class XPHelper
 {
@@ -37,7 +37,7 @@ public class XPHelper
 	public static void syncXP(EntityPlayerMP player)
 	{
 		// Make sure the client isn't being stupid about syncing the experience bars which routinely fail
-        player.playerNetServerHandler.sendPacket(new S1FPacketSetExperience(player.experience, player.experienceTotal, player.experienceLevel));
+        player.playerNetServerHandler.sendPacketToPlayer(new Packet43Experience(player.experience, player.experienceTotal, player.experienceLevel));
 	}
 	
 	public static long getPlayerXP(EntityPlayer player)

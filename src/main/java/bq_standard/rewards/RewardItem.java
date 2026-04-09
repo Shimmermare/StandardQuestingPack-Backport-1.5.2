@@ -8,6 +8,7 @@ import betterquesting.api.utils.JsonHelper;
 import betterquesting.api2.client.gui.misc.IGuiRect;
 import betterquesting.api2.client.gui.panels.IGuiPanel;
 import betterquesting.api2.storage.DBEntry;
+import betterquesting.backport.NbtUtils;
 import bq_standard.NBTReplaceUtil;
 import bq_standard.client.gui.rewards.PanelRewardItem;
 import bq_standard.core.BQ_Standard;
@@ -17,15 +18,15 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.util.ResourceLocation;
-import org.apache.logging.log4j.Level;
+import betterquesting.backport.ResourceLocation;
+import java.util.logging.Level;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class RewardItem implements IReward
 {
-	public final List<BigItemStack> items = new ArrayList<>();
+	public final List<BigItemStack> items = new ArrayList<BigItemStack>();
 	
 	@Override
 	public ResourceLocation getFactoryID()
@@ -72,16 +73,16 @@ public class RewardItem implements IReward
 	public void readFromNBT(NBTTagCompound nbt)
 	{
 		items.clear();
-		NBTTagList rList = nbt.getTagList("rewards", 10);
+		NBTTagList rList = NbtUtils.getTagList(nbt,"rewards", 10);
 		for(int i = 0; i < rList.tagCount(); i++)
 		{
 			try
 			{
-				BigItemStack item = JsonHelper.JsonToItemStack(rList.getCompoundTagAt(i));
+				BigItemStack item = JsonHelper.JsonToItemStack(NbtUtils.getCompoundTagAt(rList, i));
 				if(item != null) items.add(item);
 			} catch(Exception e)
 			{
-				BQ_Standard.logger.log(Level.ERROR, "Unable to load reward item data", e);
+				BQ_Standard.logger.log(Level.SEVERE, "Unable to load reward item data", e);
 			}
 		}
 	}

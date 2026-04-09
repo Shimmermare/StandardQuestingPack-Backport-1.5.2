@@ -4,14 +4,10 @@ import betterquesting.api.utils.JsonHelper;
 import betterquesting.api.utils.NBTConverter;
 import bq_standard.network.handlers.NetLootSync;
 import bq_standard.rewards.loot.LootRegistry;
-import com.google.gson.JsonObject;
-import net.minecraft.command.CommandBase;
-import net.minecraft.command.CommandException;
-import net.minecraft.command.ICommandSender;
-import net.minecraft.command.WrongUsageException;
+import betterquesting.shadow.com.google.gson.JsonObject;
+import net.minecraft.command.*;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
 
 import java.io.File;
@@ -51,7 +47,7 @@ public class BQS_Commands extends CommandBase
 				NBTTagCompound jsonQ = new NBTTagCompound();
 				LootRegistry.INSTANCE.writeToNBT(jsonQ, null);
 				JsonHelper.WriteToFile(new File(MinecraftServer.getServer().getFile("config/betterquesting/"), "DefaultLoot.json"), NBTConverter.NBTtoJSON_Compound(jsonQ, new JsonObject(), true));
-				sender.addChatMessage(new ChatComponentText("Loot database set as global default"));
+				sender.sendChatToPlayer("Loot database set as global default");
 			} else if(args[1].equalsIgnoreCase("load"))
 			{
 		    	File f1 = new File("config/betterquesting/DefaultLoot.json");
@@ -62,10 +58,10 @@ public class BQS_Commands extends CommandBase
 					j1 = NBTConverter.JSONtoNBT_Object(JsonHelper.ReadFromFile(f1), new NBTTagCompound(), true);
 					LootRegistry.INSTANCE.readFromNBT(j1, false);
                     NetLootSync.sendSync(null);
-					sender.addChatMessage(new ChatComponentText("Reloaded default loot database"));
+					sender.sendChatToPlayer("Reloaded default loot database");
 				} else
 				{
-					sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "No default loot currently set"));
+					sender.sendChatToPlayer(EnumChatFormatting.RED + "No default loot currently set");
 				}
 			} else
 			{
@@ -77,7 +73,7 @@ public class BQS_Commands extends CommandBase
 			{
 				LootRegistry.INSTANCE.reset();
                 NetLootSync.sendSync(null);
-				sender.addChatMessage(new ChatComponentText("Deleted all loot groups"));
+				sender.sendChatToPlayer("Deleted all loot groups");
 			} else
 			{
 				try
@@ -86,10 +82,10 @@ public class BQS_Commands extends CommandBase
 					if(LootRegistry.INSTANCE.removeID(idx))
                     {
                         NetLootSync.sendSync(null);
-                        sender.addChatMessage(new ChatComponentText("Deleted loot group with ID " + idx));
+                        sender.sendChatToPlayer("Deleted loot group with ID " + idx);
                     } else
                     {
-                        sender.addChatMessage(new ChatComponentText("Unable to find loot group with ID " + idx));
+                        sender.sendChatToPlayer("Unable to find loot group with ID " + idx);
                     }
 				} catch(Exception e)
 				{
@@ -101,4 +97,9 @@ public class BQS_Commands extends CommandBase
 			throw new WrongUsageException(getCommandUsage(sender));
 		}
 	}
+
+    @Override
+    public int compareTo(Object o) {
+        return compareTo((ICommand)o);
+    }
 }

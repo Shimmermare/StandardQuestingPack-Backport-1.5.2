@@ -16,9 +16,11 @@ import betterquesting.api2.client.gui.resources.textures.ItemTexture;
 import bq_standard.XPHelper;
 import bq_standard.tasks.TaskXP;
 import net.minecraft.client.Minecraft;
-import net.minecraft.init.Items;
+import net.minecraft.item.Item;
 import net.minecraft.util.EnumChatFormatting;
 import org.lwjgl.util.vector.Vector4f;
+
+import java.util.concurrent.Callable;
 
 public class PanelTaskXP extends CanvasEmpty
 {
@@ -35,7 +37,7 @@ public class PanelTaskXP extends CanvasEmpty
     {
         super.initPanel();
         
-        this.addPanel(new PanelGeneric(new GuiTransform(GuiAlign.MID_CENTER, -16, -32, 32, 32, 0), new ItemTexture(new BigItemStack(Items.experience_bottle))));
+        this.addPanel(new PanelGeneric(new GuiTransform(GuiAlign.MID_CENTER, -16, -32, 32, 32, 0), new ItemTexture(new BigItemStack(Item.expBottle))));
         
 		long xp = task.getUsersProgress(QuestingAPI.getQuestingUUID(Minecraft.getMinecraft().thePlayer));
 		xp = !task.levels? xp : XPHelper.getXPLevel(xp);
@@ -43,7 +45,12 @@ public class PanelTaskXP extends CanvasEmpty
         
         PanelHBarFill fillBar = new PanelHBarFill(new GuiTransform(new Vector4f(0.25F, 0.5F, 0.75F, 0.5F), new GuiPadding(0, 0, 0, -16), 0));
         fillBar.setFillColor(new GuiColorStatic(0xFF00FF00));
-        fillBar.setFillDriver(new ValueFuncIO<>(() -> xpPercent));
+        fillBar.setFillDriver(new ValueFuncIO<Float>(new Callable<Float>() {
+            @Override
+            public Float call() throws Exception {
+                return xpPercent;
+            }
+        }));
         this.addPanel(fillBar);
         
         this.addPanel(new PanelTextBox(new GuiTransform(new Vector4f(0.25F, 0.5F, 0.75F, 0.5F), new GuiPadding(0, 4, 0, -16), -1), EnumChatFormatting.BOLD + "" + xp + "/" + task.amount + (task.levels ? "L" : "XP")).setAlignment(1));

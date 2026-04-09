@@ -9,6 +9,7 @@ import betterquesting.api2.client.gui.panels.IGuiPanel;
 import betterquesting.api2.storage.DBEntry;
 import betterquesting.api2.utils.ParticipantInfo;
 import betterquesting.api2.utils.Tuple2;
+import betterquesting.backport.NbtUtils;
 import bq_standard.client.gui.tasks.PanelTaskInteractEntity;
 import bq_standard.core.BQ_Standard;
 import bq_standard.tasks.factory.FactoryTaskInteractEntity;
@@ -21,8 +22,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTTagString;
-import net.minecraft.util.ResourceLocation;
-import org.apache.logging.log4j.Level;
+import betterquesting.backport.ResourceLocation;
+import java.util.logging.Level;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -30,8 +31,8 @@ import java.util.*;
 
 public class TaskInteractEntity implements ITask
 {
-	private final Set<UUID> completeUsers = new TreeSet<>();
-	private final TreeMap<UUID, Integer> userProgress = new TreeMap<>();
+	private final Set<UUID> completeUsers = new TreeSet<UUID>();
+	private final TreeMap<UUID, Integer> userProgress = new TreeMap<UUID, Integer>();
 	
 	@Nullable
     public BigItemStack targetItem = null;
@@ -76,7 +77,7 @@ public class TaskInteractEntity implements ITask
         if(!ignoreEntityNBT)
         {
             NBTTagCompound subjectTags = new NBTTagCompound();
-            entity.writeToNBTOptional(subjectTags);
+            entity.addEntityID(subjectTags);
             if(!ItemComparison.CompareNBTTag(entityTags, subjectTags, true)) return;
         }
         
@@ -92,13 +93,13 @@ public class TaskInteractEntity implements ITask
         }
 		
         final List<Tuple2<UUID, Integer>> progress = getBulkProgress(pInfo.ALL_UUIDS);
-        
-        progress.forEach((value) -> {
+
+        for (Tuple2<UUID, Integer> value : progress) {
             if(isComplete(value.getFirst())) return;
             int np = Math.min(required, value.getSecond() + 1);
             setUserProgress(value.getFirst(), np);
             if(np >= required) setComplete(value.getFirst());
-        });
+        }
         
 		pInfo.markDirtyParty(Collections.singletonList(quest.getID()));
     }
@@ -107,10 +108,10 @@ public class TaskInteractEntity implements ITask
     public void detect(ParticipantInfo pInfo, DBEntry<IQuest> quest)
     {
         final List<Tuple2<UUID, Integer>> progress = getBulkProgress(pInfo.ALL_UUIDS);
-        
-        progress.forEach((value) -> {
+
+        for (Tuple2<UUID, Integer> value : progress) {
             if(value.getSecond() >= required) setComplete(value.getFirst());
-        });
+        }
         
 		pInfo.markDirtyParty(Collections.singletonList(quest.getID()));
     }
@@ -165,29 +166,29 @@ public class TaskInteractEntity implements ITask
             userProgress.clear();
         }
 		
-		NBTTagList cList = nbt.getTagList("completeUsers", 8);
+		NBTTagList cList = NbtUtils.getTagList(nbt,"completeUsers", 8);
 		for(int i = 0; i < cList.tagCount(); i++)
 		{
 			try
 			{
-				completeUsers.add(UUID.fromString(cList.getStringTagAt(i)));
+				completeUsers.add(UUID.fromString(NbtUtils.getStringTagAt(cList, i)));
 			} catch(Exception e)
 			{
-				BQ_Standard.logger.log(Level.ERROR, "Unable to load UUID for task", e);
+				BQ_Standard.logger.log(Level.SEVERE, "Unable to load UUID for task", e);
 			}
 		}
 		
-		NBTTagList pList = nbt.getTagList("userProgress", 10);
+		NBTTagList pList = NbtUtils.getTagList(nbt,"userProgress", 10);
 		for(int n = 0; n < pList.tagCount(); n++)
 		{
 			try
 			{
-                NBTTagCompound pTag = pList.getCompoundTagAt(n);
+                NBTTagCompound pTag = NbtUtils.getCompoundTagAt(pList, n);
                 UUID uuid = UUID.fromString(pTag.getString("uuid"));
                 userProgress.put(uuid, pTag.getInteger("value"));
 			} catch(Exception e)
 			{
-				BQ_Standard.logger.log(Level.ERROR, "Unable to load user progress for task", e);
+				BQ_Standard.logger.log(Level.SEVERE, "Unable to load user progress for task", e);
 			}
 		}
 	}
@@ -200,9 +201,9 @@ public class TaskInteractEntity implements ITask
 		
 		if(users != null)
         {
-            users.forEach((uuid) -> {
+            for (UUID uuid : users) {
                 if(completeUsers.contains(uuid)) jArray.appendTag(new NBTTagString(uuid.toString()));
-                
+
                 Integer data = userProgress.get(uuid);
                 if(data != null)
                 {
@@ -211,17 +212,21 @@ public class TaskInteractEntity implements ITask
                     pJson.setInteger("value", data);
                     progArray.appendTag(pJson);
                 }
-            });
+            }
         } else
         {
-            completeUsers.forEach((uuid) -> jArray.appendTag(new NBTTagString(uuid.toString())));
-            
-            userProgress.forEach((uuid, data) -> {
+            for (UUID uuid : completeUsers) {
+                jArray.appendTag(new NBTTagString(uuid.toString()));
+            }
+
+            for (Map.Entry<UUID, Integer> entry : userProgress.entrySet()) {
+                UUID uuid = entry.getKey();
+                int data = entry.getValue();
                 NBTTagCompound pJson = new NBTTagCompound();
-			    pJson.setString("uuid", uuid.toString());
+                pJson.setString("uuid", uuid.toString());
                 pJson.setInteger("value", data);
                 progArray.appendTag(pJson);
-            });
+            }
         }
 		
 		nbt.setTag("completeUsers", jArray);
@@ -279,8 +284,10 @@ public class TaskInteractEntity implements ITask
 	private List<Tuple2<UUID, Integer>> getBulkProgress(@Nonnull List<UUID> uuids)
     {
         if(uuids.size() <= 0) return Collections.emptyList();
-        List<Tuple2<UUID, Integer>> list = new ArrayList<>();
-        uuids.forEach((key) -> list.add(new Tuple2<>(key, getUsersProgress(key))));
+        List<Tuple2<UUID, Integer>> list = new ArrayList<Tuple2<UUID, Integer>>();
+        for (UUID key : uuids) {
+            list.add(new Tuple2<UUID, Integer>(key, getUsersProgress(key)));
+        }
         return list;
     }
 }

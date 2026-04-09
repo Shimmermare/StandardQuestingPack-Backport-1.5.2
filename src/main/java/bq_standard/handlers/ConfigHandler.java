@@ -2,8 +2,8 @@ package bq_standard.handlers;
 
 import bq_standard.core.BQS_Settings;
 import bq_standard.core.BQ_Standard;
-import net.minecraftforge.common.config.Configuration;
-import org.apache.logging.log4j.Level;
+import net.minecraftforge.common.Configuration;
+import java.util.logging.Level;
 
 public class ConfigHandler
 {
@@ -13,13 +13,13 @@ public class ConfigHandler
 	{
 		if(config == null)
 		{
-			BQ_Standard.logger.log(Level.ERROR, "Config attempted to be loaded before it was initialised!");
+			BQ_Standard.logger.log(Level.SEVERE, "Config attempted to be loaded before it was initialised!");
 			return;
 		}
 		
 		config.load();
 		
-		BQS_Settings.hideUpdates = config.getBoolean("Hide Updates", Configuration.CATEGORY_GENERAL, false, "Hide update notifications");
+		BQS_Settings.hideUpdates = config.get("Hide Updates", Configuration.CATEGORY_GENERAL, false, "Hide update notifications").getBoolean(false);
 		
 		config.save();
 		

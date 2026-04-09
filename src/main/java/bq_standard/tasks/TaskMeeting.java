@@ -6,6 +6,7 @@ import betterquesting.api2.client.gui.misc.IGuiRect;
 import betterquesting.api2.client.gui.panels.IGuiPanel;
 import betterquesting.api2.storage.DBEntry;
 import betterquesting.api2.utils.ParticipantInfo;
+import betterquesting.backport.NbtUtils;
 import bq_standard.client.gui.editors.tasks.GuiEditTaskMeeting;
 import bq_standard.client.gui.tasks.PanelTaskMeeting;
 import bq_standard.core.BQ_Standard;
@@ -18,8 +19,8 @@ import net.minecraft.entity.EntityList;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTTagString;
-import net.minecraft.util.ResourceLocation;
-import org.apache.logging.log4j.Level;
+import betterquesting.backport.ResourceLocation;
+import java.util.logging.Level;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -27,7 +28,7 @@ import java.util.*;
 
 public class TaskMeeting implements ITaskTickable
 {
-	private final Set<UUID> completeUsers = new TreeSet<>();
+	private final Set<UUID> completeUsers = new TreeSet<UUID>();
 	
 	public String idName = "Villager";
 	public int range = 4;
@@ -114,15 +115,15 @@ public class TaskMeeting implements ITaskTickable
 			if(!ignoreNBT)
 			{
 			    NBTTagCompound subjectTags = new NBTTagCompound();
-			    entity.writeToNBTOptional(subjectTags);
+			    entity.addEntityID(subjectTags);
 				if(!ItemComparison.CompareNBTTag(targetTags, subjectTags, true)) continue;
 			}
 			
 			if(++n >= amount)
 			{
-			    pInfo.ALL_UUIDS.forEach((uuid) -> {
-			        if(!isComplete(uuid)) setComplete(uuid);
-                });
+                for (UUID uuid : pInfo.ALL_UUIDS) {
+                    if(!isComplete(uuid)) setComplete(uuid);
+                }
 			    pInfo.markDirtyParty(Collections.singletonList(quest.getID()));
 				return;
 			}
@@ -145,7 +146,7 @@ public class TaskMeeting implements ITaskTickable
 	@Override
 	public void readFromNBT(NBTTagCompound json)
 	{
-		idName = json.hasKey("target", 8) ? json.getString("target") : "Villager";
+		idName = NbtUtils.hasKey(json,"target", 8) ? json.getString("target") : "Villager";
 		range = json.getInteger("range");
 		amount = json.getInteger("amount");
 		subtypes = json.getBoolean("subtypes");
@@ -157,10 +158,10 @@ public class TaskMeeting implements ITaskTickable
 	public NBTTagCompound writeProgressToNBT(NBTTagCompound nbt, List<UUID> users)
 	{
 		NBTTagList jArray = new NBTTagList();
-		
-		completeUsers.forEach((uuid) -> {
-		    if(users == null || users.contains(uuid)) jArray.appendTag(new NBTTagString(uuid.toString()));
-		});
+
+        for (UUID uuid : completeUsers) {
+            if(users == null || users.contains(uuid)) jArray.appendTag(new NBTTagString(uuid.toString()));
+        }
 		
 		nbt.setTag("completeUsers", jArray);
 		
@@ -171,15 +172,15 @@ public class TaskMeeting implements ITaskTickable
 	public void readProgressFromNBT(NBTTagCompound nbt, boolean merge)
 	{
 		if(!merge) completeUsers.clear();
-		NBTTagList cList = nbt.getTagList("completeUsers", 8);
+		NBTTagList cList = NbtUtils.getTagList(nbt,"completeUsers", 8);
 		for(int i = 0; i < cList.tagCount(); i++)
 		{
 			try
 			{
-				completeUsers.add(UUID.fromString(cList.getStringTagAt(i)));
+				completeUsers.add(UUID.fromString(NbtUtils.getStringTagAt(cList, i)));
 			} catch(Exception e)
 			{
-				BQ_Standard.logger.log(Level.ERROR, "Unable to load UUID for task", e);
+				BQ_Standard.logger.log(Level.SEVERE, "Unable to load UUID for task", e);
 			}
 		}
 	}

@@ -2,6 +2,7 @@ package bq_standard.client.gui.editors.tasks;
 
 import betterquesting.api.api.ApiReference;
 import betterquesting.api.api.QuestingAPI;
+import betterquesting.api.misc.ICallback;
 import betterquesting.api.network.QuestingPacket;
 import betterquesting.api.questing.IQuest;
 import betterquesting.api2.client.gui.GuiScreenCanvas;
@@ -30,8 +31,10 @@ import net.minecraft.entity.EntityList;
 import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.util.ResourceLocation;
+import betterquesting.backport.ResourceLocation;
 import org.lwjgl.input.Keyboard;
+
+import java.util.concurrent.Callable;
 
 public class GuiEditTaskMeeting extends GuiScreenCanvas
 {
@@ -66,10 +69,25 @@ public class GuiEditTaskMeeting extends GuiScreenCanvas
             if(target != null) target.readFromNBT(task.targetTags);
         } else target = null;
         
-        this.addPanel(new PanelEntityPreview(new GuiTransform(GuiAlign.HALF_TOP, new GuiPadding(16, 32, 16, 0), 0), target).setRotationDriven(new ValueFuncIO<>(() -> 15F), new ValueFuncIO<>(() -> (float)(Minecraft.getSystemTime()%30000L / 30000D * 360D)))); // Preview works with null. It's fine (or should be)
+        this.addPanel(new PanelEntityPreview(new GuiTransform(GuiAlign.HALF_TOP, new GuiPadding(16, 32, 16, 0), 0), target).setRotationDriven(new ValueFuncIO<Float>(new Callable<Float>() {
+            @Override
+            public Float call() throws Exception {
+                return 15F;
+            }
+        }), new ValueFuncIO<Float>(new Callable<Float>() {
+            @Override
+            public Float call() throws Exception {
+                return (float)(Minecraft.getSystemTime()%30000L / 30000D * 360D);
+            }
+        }))); // Preview works with null. It's fine (or should be)
         
         cvBackground.addPanel(new PanelTextBox(new GuiTransform(GuiAlign.MID_CENTER, -100, 4, 96, 12, 0), QuestTranslation.translate("bq_standard.gui.amount")).setAlignment(2).setColor(PresetColor.TEXT_MAIN.getColor()));
-        cvBackground.addPanel(new PanelTextField<>(new GuiTransform(GuiAlign.MID_CENTER, 0, 0, 100, 16, 0), "" + task.amount, FieldFilterNumber.INT).setCallback(value -> task.amount = value));
+        cvBackground.addPanel(new PanelTextField<Integer>(new GuiTransform(GuiAlign.MID_CENTER, 0, 0, 100, 16, 0), "" + task.amount, FieldFilterNumber.INT).setCallback(new ICallback<Integer>() {
+            @Override
+            public void setValue(Integer value) {
+                task.amount = value;
+            }
+        }));
         
         final GuiScreen screenRef = this;
         cvBackground.addPanel(new PanelButton(new GuiTransform(GuiAlign.MID_CENTER, -100, 16, 200, 16, 0), -1, QuestTranslation.translate("bq_standard.btn.select_mob"))
@@ -77,12 +95,15 @@ public class GuiEditTaskMeeting extends GuiScreenCanvas
             @Override
             public void onButtonClick()
             {
-                mc.displayGuiScreen(QuestingAPI.getAPI(ApiReference.THEME_REG).getGui(PresetGUIs.EDIT_ENTITY, new GArgsCallback<>(screenRef, target, value -> {
-                    Entity tmp = value != null ? value : new EntityVillager(mc.theWorld);
-                    String res = EntityList.getEntityString(tmp);
-                    task.idName = res != null ? res : "Villager";
-                    task.targetTags = new NBTTagCompound();
-                    tmp.writeToNBTOptional(task.targetTags);
+                mc.displayGuiScreen(QuestingAPI.getAPI(ApiReference.THEME_REG).getGui(PresetGUIs.EDIT_ENTITY, new GArgsCallback<Entity>(screenRef, target, new ICallback<Entity>() {
+                    @Override
+                    public void setValue(Entity value) {
+                        Entity tmp = value != null ? value : new EntityVillager(mc.theWorld);
+                        String res = EntityList.getEntityString(tmp);
+                        task.idName = res != null ? res : "Villager";
+                        task.targetTags = new NBTTagCompound();
+                        tmp.addEntityID(task.targetTags);
+                    }
                 })));
             }
         });
@@ -92,7 +113,12 @@ public class GuiEditTaskMeeting extends GuiScreenCanvas
             @Override
             public void onButtonClick()
             {
-                mc.displayGuiScreen(QuestingAPI.getAPI(ApiReference.THEME_REG).getGui(PresetGUIs.EDIT_NBT, new GArgsNBT<>(screenRef, task.writeToNBT(new NBTTagCompound()), task::readFromNBT, null)));
+                mc.displayGuiScreen(QuestingAPI.getAPI(ApiReference.THEME_REG).getGui(PresetGUIs.EDIT_NBT, new GArgsNBT<NBTTagCompound>(screenRef, task.writeToNBT(new NBTTagCompound()), new ICallback<NBTTagCompound>() {
+                    @Override
+                    public void setValue(NBTTagCompound compound) {
+                        task.readFromNBT(compound);
+                    }
+                }, null)));
             }
         });
         

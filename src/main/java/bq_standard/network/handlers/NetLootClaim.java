@@ -4,6 +4,8 @@ import betterquesting.api.api.ApiReference;
 import betterquesting.api.api.QuestingAPI;
 import betterquesting.api.network.QuestingPacket;
 import betterquesting.api.utils.BigItemStack;
+import betterquesting.backport.Consumer;
+import betterquesting.backport.NbtUtils;
 import bq_standard.client.gui.GuiLootChest;
 import bq_standard.core.BQ_Standard;
 import cpw.mods.fml.relauncher.Side;
@@ -12,7 +14,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.util.ResourceLocation;
+import betterquesting.backport.ResourceLocation;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -26,7 +28,12 @@ public class NetLootClaim
     {
         if(BQ_Standard.proxy.isClient())
         {
-            QuestingAPI.getAPI(ApiReference.PACKET_REG).registerClientHandler(ID_NAME, NetLootClaim::onClient);
+            QuestingAPI.getAPI(ApiReference.PACKET_REG).registerClientHandler(ID_NAME, new Consumer<NBTTagCompound>() {
+                @Override
+                public void accept(NBTTagCompound compound) {
+                    NetLootClaim.onClient(compound);
+                }
+            });
         }
     }
     
@@ -47,13 +54,13 @@ public class NetLootClaim
 	private static void onClient(NBTTagCompound data)
 	{
 		String title = data.getString("title");
-		List<BigItemStack> rewards = new ArrayList<>();
+		List<BigItemStack> rewards = new ArrayList<BigItemStack>();
 		
-		NBTTagList list = data.getTagList("rewards", 10);
+		NBTTagList list = NbtUtils.getTagList(data,"rewards", 10);
 		
 		for(int i = 0; i < list.tagCount(); i++)
 		{
-			rewards.add(BigItemStack.loadItemStackFromNBT(list.getCompoundTagAt(i)));
+			rewards.add(BigItemStack.loadItemStackFromNBT(NbtUtils.getCompoundTagAt(list, i)));
 		}
 		
 		Minecraft.getMinecraft().displayGuiScreen(new GuiLootChest(null, rewards, title));

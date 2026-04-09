@@ -26,9 +26,7 @@ public class CommonProxy
 	public void registerHandlers()
 	{
 		MinecraftForge.EVENT_BUS.register(LootRegistry.INSTANCE);
-		EventHandler evHandle = new EventHandler();
-        FMLCommonHandler.instance().bus().register(evHandle);
-		MinecraftForge.EVENT_BUS.register(evHandle);
+		MinecraftForge.EVENT_BUS.register(new EventHandler());
 	}
 	
 	public void registerRenderers()
@@ -46,7 +44,6 @@ public class CommonProxy
 		taskReg.register(FactoryTaskLocation.INSTANCE);
 		taskReg.register(FactoryTaskMeeting.INSTANCE);
 		taskReg.register(FactoryTaskRetrieval.INSTANCE);
-		taskReg.register(FactoryTaskScoreboard.INSTANCE);
 		taskReg.register(FactoryTaskXP.INSTANCE);
 		taskReg.register(FactoryTaskInteractItem.INSTANCE);
 		taskReg.register(FactoryTaskInteractEntity.INSTANCE);
@@ -55,13 +52,11 @@ public class CommonProxy
 		rewardReg.register(FactoryRewardChoice.INSTANCE);
 		rewardReg.register(FactoryRewardCommand.INSTANCE);
 		rewardReg.register(FactoryRewardItem.INSTANCE);
-		rewardReg.register(FactoryRewardScoreboard.INSTANCE);
 		rewardReg.register(FactoryRewardXP.INSTANCE);
 		
 		NetLootSync.registerHandler();
 		NetLootClaim.registerHandler();
 		NetTaskCheckbox.registerHandler();
-		NetScoreSync.registerHandler();
 		NetRewardChoice.registerHandler();
 		NetLootImport.registerHandler();
 		NetTaskInteract.registerHandler();

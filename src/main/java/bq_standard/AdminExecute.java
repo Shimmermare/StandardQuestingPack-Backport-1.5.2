@@ -3,7 +3,6 @@ package bq_standard;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ChunkCoordinates;
-import net.minecraft.util.IChatComponent;
 import net.minecraft.world.World;
 
 /**
@@ -24,33 +23,25 @@ public class AdminExecute implements ICommandSender
 		return player.getCommandSenderName();
 	}
 
-	@Override
-	public IChatComponent func_145748_c_()
-	{
-		return player.func_145748_c_();
-	}
+    @Override
+    public void sendChatToPlayer(String s) {
+        player.addChatMessage(s);
+    }
 
-	@Override
-	public void addChatMessage(IChatComponent p_145747_1_)
-	{
-		player.addChatMessage(p_145747_1_);
-	}
-
-	@Override
+    @Override
 	public boolean canCommandSenderUseCommand(int p_70003_1_, String p_70003_2_)
 	{
 		return true;
 	}
 
-	@Override
+    @Override
+    public String translateString(String s, Object... objects) {
+        return player.translateString(s, objects);
+    }
+
+    @Override
 	public ChunkCoordinates getPlayerCoordinates()
 	{
 		return player.getPlayerCoordinates();
-	}
-
-	@Override
-	public World getEntityWorld()
-	{
-		return player.getEntityWorld();
 	}
 }

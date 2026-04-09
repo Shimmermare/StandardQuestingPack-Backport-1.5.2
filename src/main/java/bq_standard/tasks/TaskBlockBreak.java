@@ -9,6 +9,7 @@ import betterquesting.api2.client.gui.panels.IGuiPanel;
 import betterquesting.api2.storage.DBEntry;
 import betterquesting.api2.utils.ParticipantInfo;
 import betterquesting.api2.utils.Tuple2;
+import betterquesting.backport.NbtUtils;
 import bq_standard.NbtBlockType;
 import bq_standard.client.gui.tasks.PanelTaskBlockBreak;
 import bq_standard.core.BQ_Standard;
@@ -17,14 +18,12 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.block.Block;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.*;
-import net.minecraft.nbt.NBTBase.NBTPrimitive;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ResourceLocation;
+import betterquesting.backport.ResourceLocation;
 import net.minecraftforge.oredict.OreDictionary;
-import org.apache.logging.log4j.Level;
+import java.util.logging.Level;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -32,9 +31,9 @@ import java.util.*;
 
 public class TaskBlockBreak implements ITask
 {
-	private final Set<UUID> completeUsers = new TreeSet<>();
-	private final TreeMap<UUID, int[]> userProgress = new TreeMap<>();
-	public final List<NbtBlockType> blockTypes = new ArrayList<>();
+	private final Set<UUID> completeUsers = new TreeSet<UUID>();
+	private final TreeMap<UUID, int[]> userProgress = new TreeMap<UUID, int[]>();
+	public final List<NbtBlockType> blockTypes = new ArrayList<NbtBlockType>();
 	
 	public TaskBlockBreak()
 	{
@@ -68,9 +67,9 @@ public class TaskBlockBreak implements ITask
 	@Override
 	public void detect(ParticipantInfo pInfo, DBEntry<IQuest> quest)
 	{
-	    pInfo.ALL_UUIDS.forEach((uuid) -> {
+        for (UUID uuid : pInfo.ALL_UUIDS) {
             if(isComplete(uuid)) return;
-            
+
             int[] tmp = getUsersProgress(uuid);
             for(int i = 0; i < blockTypes.size(); i++)
             {
@@ -78,14 +77,14 @@ public class TaskBlockBreak implements ITask
                 if(block != null && tmp[i] < block.n) return;
             }
             setComplete(uuid);
-        });
+        }
 	    
 	    pInfo.markDirtyParty(Collections.singletonList(quest.getID()));
 	}
 	
 	public void onBlockBreak(ParticipantInfo pInfo, DBEntry<IQuest> quest, Block block, int meta, int x, int y, int z)
 	{
-		TileEntity tile = block.hasTileEntity(meta) ? pInfo.PLAYER.worldObj.getTileEntity(x, y, z) : null;
+		TileEntity tile = block.hasTileEntity(meta) ? pInfo.PLAYER.worldObj.getBlockTileEntity(x, y, z) : null;
 		NBTTagCompound tags = null;
 		if(tile != null)
         {
@@ -106,10 +105,10 @@ public class TaskBlockBreak implements ITask
 			
 			if((oreMatch || (block == targetBlock.b && (targetBlock.m < 0 || meta == targetBlock.m))) && ItemComparison.CompareNBTTag(targetBlock.tags, tags, true))
 			{
-			    progress.forEach((entry) -> {
-			        if(entry.getSecond()[index] >= targetBlock.n) return;
-			        entry.getSecond()[index]++;
-                });
+                for (Tuple2<UUID, int[]> entry : progress) {
+                    if(entry.getSecond()[index] >= targetBlock.n) return;
+                    entry.getSecond()[index]++;
+                }
 			    changed = true;
 				break; // NOTE: We're only tracking one break at a time so doing all the progress setting above is fine
 			}
@@ -139,18 +138,19 @@ public class TaskBlockBreak implements ITask
 	public void readFromNBT(NBTTagCompound nbt)
 	{
 		blockTypes.clear();
-		NBTTagList bList = nbt.getTagList("blocks", 10);
+		NBTTagList bList = NbtUtils.getTagList(nbt,"blocks", 10);
 		for(int i = 0; i < bList.tagCount(); i++)
 		{
 			NbtBlockType block = new NbtBlockType();
-			block.readFromNBT(bList.getCompoundTagAt(i));
+			block.readFromNBT(NbtUtils.getCompoundTagAt(bList,i));
 			blockTypes.add(block);
 		}
 		
-		if(nbt.hasKey("blockID", 8))
+		if(NbtUtils.hasKey(nbt,"blockID", 8))
 		{
-			Block targetBlock = (Block)Block.blockRegistry.getObject(nbt.getString("blockID"));
-			targetBlock = targetBlock != Blocks.air ? targetBlock : Blocks.log;
+            short blockId = nbt.getShort("blockID");
+			Block targetBlock = blockId >= 0 && blockId <= Block.blocksList.length ? Block.blocksList[blockId] : null;
+			targetBlock = targetBlock != null ? targetBlock : Block.wood;
 			int targetMeta = nbt.getInteger("blockMeta");
 			NBTTagCompound targetNbt = nbt.getCompoundTag("blockNBT");
 			int targetNum = nbt.getInteger("amount");
@@ -174,37 +174,37 @@ public class TaskBlockBreak implements ITask
             userProgress.clear();
         }
 		
-		NBTTagList cList = nbt.getTagList("completeUsers", 8);
+		NBTTagList cList = NbtUtils.getTagList(nbt,"completeUsers", 8);
 		for(int i = 0; i < cList.tagCount(); i++)
 		{
 			try
 			{
-				completeUsers.add(UUID.fromString(cList.getStringTagAt(i)));
+				completeUsers.add(UUID.fromString(NbtUtils.getStringTagAt(cList, i)));
 			} catch(Exception e)
 			{
-				BQ_Standard.logger.log(Level.ERROR, "Unable to load UUID for task", e);
+				BQ_Standard.logger.log(Level.SEVERE, "Unable to load UUID for task", e);
 			}
 		}
 		
-		NBTTagList pList = nbt.getTagList("userProgress", 10);
+		NBTTagList pList = NbtUtils.getTagList(nbt,"userProgress", 10);
 		for(int n = 0; n < pList.tagCount(); n++)
 		{
 			try
 			{
-                NBTTagCompound pTag = pList.getCompoundTagAt(n);
+                NBTTagCompound pTag = NbtUtils.getCompoundTagAt(pList, n);
                 UUID uuid = UUID.fromString(pTag.getString("uuid"));
                 
                 int[] data = new int[blockTypes.size()];
-                List<NBTBase> dNbt = NBTConverter.getTagList(pTag.getTagList("data", 3));
+                List<NBTBase> dNbt = NBTConverter.getTagList(NbtUtils.getTagList(pTag,"data", 3));
                 for(int i = 0; i < data.length && i < dNbt.size(); i++) // TODO: Change this to an int array. This is dumb...
                 {
-                    data[i] = ((NBTPrimitive)dNbt.get(i)).func_150287_d();
+                    data[i] = NbtUtils.intValue(dNbt.get(i));
                 }
                 
 			    userProgress.put(uuid, data);
 			} catch(Exception e)
 			{
-				BQ_Standard.logger.log(Level.ERROR, "Unable to load user progress for task", e);
+				BQ_Standard.logger.log(Level.SEVERE, "Unable to load user progress for task", e);
 			}
 		}
 	}
@@ -217,32 +217,35 @@ public class TaskBlockBreak implements ITask
 		
 		if(users != null)
         {
-            users.forEach((uuid) -> {
+            for (UUID uuid : users) {
                 if(completeUsers.contains(uuid)) jArray.appendTag(new NBTTagString(uuid.toString()));
-                
+
                 int[] data = userProgress.get(uuid);
                 if(data != null)
                 {
                     NBTTagCompound pJson = new NBTTagCompound();
                     pJson.setString("uuid", uuid.toString());
                     NBTTagList pArray = new NBTTagList(); // TODO: Why the heck isn't this just an int array?!
-                    for(int i : data) pArray.appendTag(new NBTTagInt(i));
+                    for(int i : data) pArray.appendTag(new NBTTagInt(null, i));
                     pJson.setTag("data", pArray);
                     progArray.appendTag(pJson);
                 }
-            });
+            }
         } else
         {
-            completeUsers.forEach((uuid) -> jArray.appendTag(new NBTTagString(uuid.toString())));
-            
-            userProgress.forEach((uuid, data) -> {
+            for (UUID uuid : completeUsers) {
+                jArray.appendTag(new NBTTagString(uuid.toString()));
+            }
+            for (Map.Entry<UUID, int[]> entry : userProgress.entrySet()) {
+                UUID uuid = entry.getKey();
+                int[] data = entry.getValue();
                 NBTTagCompound pJson = new NBTTagCompound();
-			    pJson.setString("uuid", uuid.toString());
+                pJson.setString("uuid", uuid.toString());
                 NBTTagList pArray = new NBTTagList(); // TODO: Why the heck isn't this just an int array?!
-                for(int i : data) pArray.appendTag(new NBTTagInt(i));
+                for(int i : data) pArray.appendTag(new NBTTagInt(null, i));
                 pJson.setTag("data", pArray);
                 progArray.appendTag(pJson);
-            });
+            }
         }
 		
 		nbt.setTag("completeUsers", jArray);
@@ -293,13 +296,17 @@ public class TaskBlockBreak implements ITask
 	private List<Tuple2<UUID, int[]>> getBulkProgress(@Nonnull List<UUID> uuids)
     {
         if(uuids.size() <= 0) return Collections.emptyList();
-        List<Tuple2<UUID, int[]>> list = new ArrayList<>();
-        uuids.forEach((key) -> list.add(new Tuple2<>(key, getUsersProgress(key))));
+        List<Tuple2<UUID, int[]>> list = new ArrayList<Tuple2<UUID, int[]>>();
+        for (UUID key : uuids) {
+            list.add(new Tuple2<UUID, int[]>(key, getUsersProgress(key)));
+        }
         return list;
     }
     
     private void setBulkProgress(@Nonnull List<Tuple2<UUID, int[]>> list)
     {
-        list.forEach((entry) -> setUserProgress(entry.getFirst(), entry.getSecond()));
+        for (Tuple2<UUID, int[]> entry : list) {
+            setUserProgress(entry.getFirst(), entry.getSecond());
+        }
     }
 }

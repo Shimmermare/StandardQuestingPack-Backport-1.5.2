@@ -8,6 +8,8 @@ import betterquesting.api.network.QuestingPacket;
 import betterquesting.api.questing.IQuest;
 import betterquesting.api.questing.rewards.IReward;
 import betterquesting.api2.utils.Tuple2;
+import betterquesting.backport.Consumer;
+import betterquesting.backport.NbtUtils;
 import bq_standard.core.BQ_Standard;
 import bq_standard.rewards.RewardChoice;
 import cpw.mods.fml.relauncher.Side;
@@ -16,7 +18,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ResourceLocation;
+import betterquesting.backport.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 
 import javax.annotation.Nonnull;
@@ -27,11 +29,21 @@ public class NetRewardChoice
 	
 	public static void registerHandler()
     {
-        QuestingAPI.getAPI(ApiReference.PACKET_REG).registerServerHandler(ID_NAME, NetRewardChoice::onServer);
+        QuestingAPI.getAPI(ApiReference.PACKET_REG).registerServerHandler(ID_NAME, new Consumer<Tuple2<NBTTagCompound, EntityPlayerMP>>() {
+            @Override
+            public void accept(Tuple2<NBTTagCompound, EntityPlayerMP> value) {
+                NetRewardChoice.onServer(value);
+            }
+        });
     
         if(BQ_Standard.proxy.isClient())
         {
-            QuestingAPI.getAPI(ApiReference.PACKET_REG).registerClientHandler(ID_NAME, NetRewardChoice::onClient);
+            QuestingAPI.getAPI(ApiReference.PACKET_REG).registerClientHandler(ID_NAME, new Consumer<NBTTagCompound>() {
+                @Override
+                public void accept(NBTTagCompound compound) {
+                    NetRewardChoice.onClient(compound);
+                }
+            });
         }
     }
     
@@ -81,9 +93,9 @@ public class NetRewardChoice
 	{
 		EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
 		
-		int qID = message.hasKey("questID", 99)? message.getInteger("questID") : -1;
-		int rID = message.hasKey("rewardID", 99)? message.getInteger("rewardID") : -1;
-		int sel = message.hasKey("selection", 99)? message.getInteger("selection") : -1;
+		int qID = NbtUtils.hasKey(message,"questID", 99)? message.getInteger("questID") : -1;
+		int rID = NbtUtils.hasKey(message,"rewardID", 99)? message.getInteger("rewardID") : -1;
+		int sel = NbtUtils.hasKey(message,"selection", 99)? message.getInteger("selection") : -1;
 		
 		if(qID < 0 || rID < 0) return;
 		

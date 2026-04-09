@@ -15,6 +15,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 
+import java.util.concurrent.Callable;
+
 public class PanelTaskMeeting extends CanvasEmpty
 {
     private final TaskMeeting task;
@@ -41,10 +43,20 @@ public class PanelTaskMeeting extends CanvasEmpty
             target = null;
         }
         
-		String tnm = target != null? target.getCommandSenderName() : task.idName;
+		String tnm = target != null? target.getTranslatedEntityName() : task.idName;
         
         this.addPanel(new PanelTextBox(new GuiTransform(GuiAlign.TOP_EDGE, new GuiPadding(0, 0, 0, -16), 0), QuestTranslation.translate("bq_standard.gui.meet", tnm) + " x" + task.amount).setAlignment(1).setColor(PresetColor.TEXT_MAIN.getColor()));
         
-        if(target != null) this.addPanel(new PanelEntityPreview(new GuiTransform(GuiAlign.FULL_BOX, new GuiPadding(0, 16, 0, 0), 0), target).setRotationDriven(new ValueFuncIO<>(() -> 15F), new ValueFuncIO<>(() -> (float)(Minecraft.getSystemTime()%30000L / 30000D * 360D))));
+        if(target != null) this.addPanel(new PanelEntityPreview(new GuiTransform(GuiAlign.FULL_BOX, new GuiPadding(0, 16, 0, 0), 0), target).setRotationDriven(new ValueFuncIO<Float>(new Callable<Float>() {
+            @Override
+            public Float call() throws Exception {
+                return 15F;
+            }
+        }), new ValueFuncIO<Float>(new Callable<Float>() {
+            @Override
+            public Float call() throws Exception {
+                return (float)(Minecraft.getSystemTime()%30000L / 30000D * 360D);
+            }
+        })));
     }
 }

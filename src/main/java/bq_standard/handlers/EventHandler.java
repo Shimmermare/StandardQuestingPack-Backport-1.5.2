@@ -13,30 +13,21 @@ import bq_standard.network.handlers.NetLootSync;
 import bq_standard.tasks.*;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListenableFutureTask;
-import cpw.mods.fml.client.event.ConfigChangedEvent;
-import cpw.mods.fml.common.eventhandler.EventPriority;
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import cpw.mods.fml.common.gameevent.PlayerEvent.ItemCraftedEvent;
-import cpw.mods.fml.common.gameevent.PlayerEvent.ItemSmeltedEvent;
-import cpw.mods.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
-import cpw.mods.fml.common.gameevent.TickEvent.Phase;
-import cpw.mods.fml.common.gameevent.TickEvent.ServerTickEvent;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.CraftingManager;
+import net.minecraftforge.event.EventPriority;
+import net.minecraftforge.event.ForgeSubscribe;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
-import net.minecraftforge.event.entity.player.AnvilRepairEvent;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.event.entity.player.EntityInteractEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent.Action;
-import net.minecraftforge.event.world.BlockEvent.BreakEvent;
 import net.minecraftforge.event.world.WorldEvent;
-import org.apache.commons.lang3.Validate;
 
 import java.util.ArrayDeque;
 import java.util.concurrent.Callable;
@@ -45,15 +36,16 @@ import java.util.concurrent.FutureTask;
 @SuppressWarnings("unused")
 public class EventHandler
 {
-    @SubscribeEvent(priority = EventPriority.LOWEST)
+    @ForgeSubscribe(priority = EventPriority.LOWEST)
     public void onPlayerInteract(PlayerInteractEvent event)
     {
         if(event.entityPlayer == null || event.entityPlayer.worldObj.isRemote || event.isCanceled()) return;
         
 		EntityPlayer player = event.entityPlayer;
         ParticipantInfo pInfo = new ParticipantInfo(player);
-		
-		Block block = player.worldObj.getBlock(event.x, event.y, event.z);
+
+        int blockId = player.worldObj.getBlockId(event.x, event.y, event.z);
+		Block block = Block.blocksList[blockId];
 		int meta = player.worldObj.getBlockMetadata(event.x, event.y, event.z);
 		boolean isHit = event.action == Action.LEFT_CLICK_BLOCK;
 		
@@ -66,7 +58,7 @@ public class EventHandler
 		}
     }
     
-    @SubscribeEvent(priority = EventPriority.LOWEST)
+    @ForgeSubscribe(priority = EventPriority.LOWEST)
     public void onEntityAttack(AttackEntityEvent event)
     {
         if(event.entityPlayer == null || event.target == null || event.entityPlayer.worldObj.isRemote || event.isCanceled()) return;
@@ -83,7 +75,7 @@ public class EventHandler
 		}
     }
     
-    @SubscribeEvent(priority = EventPriority.LOWEST)
+    @ForgeSubscribe(priority = EventPriority.LOWEST)
     public void onEntityInteract(EntityInteractEvent event)
     {
         if(event.entityPlayer == null || event.target == null || event.entityPlayer.worldObj.isRemote || event.isCanceled()) return;
@@ -99,7 +91,8 @@ public class EventHandler
             }
 		}
     }
-    
+
+    // FIXME move to ICraftingHandler
 	@SubscribeEvent(priority = EventPriority.LOWEST)
 	public void onItemCrafted(ItemCraftedEvent event)
 	{
@@ -123,7 +116,8 @@ public class EventHandler
             }
 		}
 	}
-	
+
+    // FIXME move to ICraftingHandler
 	@SubscribeEvent(priority = EventPriority.LOWEST)
 	public void onItemSmelted(ItemSmeltedEvent event) // This event is even more busted than crafting when shift clicking (only ever reports 2 empty stacks regardless of actual amount)
 	{
@@ -142,7 +136,8 @@ public class EventHandler
             }
 		}
 	}
-	
+
+    // FIXME idk how to replace yet
 	@SubscribeEvent(priority = EventPriority.LOWEST)
 	public void onItemAnvil(AnvilRepairEvent event) // Somehow actually works as intended unlike other crafting methods
 	{
@@ -159,7 +154,7 @@ public class EventHandler
 		}
 	}
 	
-	@SubscribeEvent(priority = EventPriority.LOWEST)
+	@ForgeSubscribe(priority = EventPriority.LOWEST)
 	public void onEntityKilled(LivingDeathEvent event)
 	{
 		if(event.source == null || !(event.source.getEntity() instanceof EntityPlayer) || event.source.getEntity().worldObj.isRemote || event.isCanceled()) return;
@@ -175,7 +170,8 @@ public class EventHandler
             }
 		}
 	}
-	
+
+    // FIXME idk how to replace yet
 	@SubscribeEvent(priority = EventPriority.LOWEST)
 	public void onBlockBreak(BreakEvent event)
 	{
@@ -192,7 +188,7 @@ public class EventHandler
 		}
 	}
 	
-	@SubscribeEvent
+	@ForgeSubscribe
     public void onEntityLiving(BQLivingUpdateEvent event)
     {
         if(!(event.entityLiving instanceof EntityPlayer) || event.entityLiving.worldObj.isRemote || event.entityLiving.ticksExisted%20 != 0 || QuestingAPI.getAPI(ApiReference.SETTINGS).getProperty(NativeProps.EDIT_MODE)) return;
@@ -212,24 +208,15 @@ public class EventHandler
 		}
     }
     
-    @SubscribeEvent
+    @ForgeSubscribe
     public void onEntityCreated(EntityJoinWorldEvent event)
     {
         if(!(event.entity instanceof EntityPlayer) || event.entity.worldObj.isRemote) return;
         
 		PlayerContainerListener.refreshListener((EntityPlayer)event.entity);
     }
-	
-	@SubscribeEvent
-	public void onConfigChanged(ConfigChangedEvent event)
-	{
-		if(event.modID.equalsIgnoreCase(BQ_Standard.MODID))
-		{
-			ConfigHandler.config.save();
-			ConfigHandler.initConfigs();
-		}
-	}
-	
+
+    // FIXME replace with IPlayerTracker
 	@SubscribeEvent
     public void onPlayerJoin(PlayerLoggedInEvent event)
     {
@@ -239,7 +226,7 @@ public class EventHandler
 		}
     }
 	
-	@SubscribeEvent
+	@ForgeSubscribe
     public void onWorldSave(WorldEvent.Save event)
     {
         if(!event.world.isRemote && LootSaveLoad.INSTANCE.worldDir != null && event.world.provider.dimensionId == 0)
@@ -248,13 +235,16 @@ public class EventHandler
         }
     }
 	
-	private static final ArrayDeque<FutureTask> serverTasks = new ArrayDeque<>();
+	private static final ArrayDeque<FutureTask> serverTasks = new ArrayDeque<FutureTask>();
 	private static Thread serverThread = null;
-	
+
+    // FIXME move out to ITickHandler
 	// NOTE: This is slightly different to the version in the base mod. This one will not immediately run tasks even if it's from the same thread.
     public static <T> ListenableFuture<T> scheduleServerTask(Callable<T> task)
     {
-        Validate.notNull(task);
+        if (task == null) {
+            throw new NullPointerException("task cannot be null");
+        }
         
         ListenableFutureTask<T> listenablefuturetask = ListenableFutureTask.create(task);
 

@@ -4,16 +4,18 @@ import betterquesting.api.api.ApiReference;
 import betterquesting.api.api.QuestingAPI;
 import betterquesting.api.network.QuestingPacket;
 import betterquesting.api2.utils.Tuple2;
+import betterquesting.backport.Consumer;
+import betterquesting.backport.PlayerUtils;
 import bq_standard.core.BQ_Standard;
 import bq_standard.rewards.loot.LootRegistry;
-import com.mojang.realmsclient.gui.ChatFormatting;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ChatComponentText;
-import net.minecraft.util.ResourceLocation;
-import org.apache.logging.log4j.Level;
+import betterquesting.backport.ResourceLocation;
+import net.minecraft.util.EnumChatFormatting;
+
+import java.util.logging.Level;
 
 import javax.annotation.Nullable;
 
@@ -23,11 +25,21 @@ public class NetLootSync
 	
 	public static void registerHandler()
     {
-        QuestingAPI.getAPI(ApiReference.PACKET_REG).registerServerHandler(ID_NAME, NetLootSync::onServer);
+        QuestingAPI.getAPI(ApiReference.PACKET_REG).registerServerHandler(ID_NAME, new Consumer<Tuple2<NBTTagCompound, EntityPlayerMP>>() {
+            @Override
+            public void accept(Tuple2<NBTTagCompound, EntityPlayerMP> value) {
+                NetLootSync.onServer(value);
+            }
+        });
     
         if(BQ_Standard.proxy.isClient())
         {
-            QuestingAPI.getAPI(ApiReference.PACKET_REG).registerClientHandler(ID_NAME, NetLootSync::onClient);
+            QuestingAPI.getAPI(ApiReference.PACKET_REG).registerClientHandler(ID_NAME, new Consumer<NBTTagCompound>() {
+                @Override
+                public void accept(NBTTagCompound compound) {
+                    NetLootSync.onClient(compound);
+                }
+            });
         }
     }
     
@@ -59,10 +71,10 @@ public class NetLootSync
 	    NBTTagCompound data = message.getFirst();
 	    
 	    if(sender.mcServer == null) return;
-		if(!sender.mcServer.getConfigurationManager().func_152596_g(sender.getGameProfile()))
+		if(!PlayerUtils.isEffectivelyOP(sender))
 		{
-			BQ_Standard.logger.log(Level.WARN, "Player " + sender.getCommandSenderName() + " (UUID:" + QuestingAPI.getQuestingUUID(sender) + ") tried to edit loot chests without OP permissions!");
-			sender.addChatComponentMessage(new ChatComponentText(ChatFormatting.RED + "You need to be OP to edit loot!"));
+			BQ_Standard.logger.log(Level.WARNING, "Player " + sender.getCommandSenderName() + " (UUID:" + QuestingAPI.getQuestingUUID(sender) + ") tried to edit loot chests without OP permissions!");
+			sender.sendChatToPlayer(EnumChatFormatting.RED + "You need to be OP to edit loot!");
 			return; // Player is not operator. Do nothing
 		}
 		

@@ -5,7 +5,7 @@ import betterquesting.api2.registry.IFactoryData;
 import bq_standard.core.BQ_Standard;
 import bq_standard.rewards.RewardXP;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ResourceLocation;
+import betterquesting.backport.ResourceLocation;
 
 public class FactoryRewardXP implements IFactoryData<IReward, NBTTagCompound>
 {

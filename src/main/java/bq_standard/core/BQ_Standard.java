@@ -8,21 +8,20 @@ import bq_standard.handlers.LootSaveLoad;
 import bq_standard.items.ItemLootChest;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.Mod;
-import cpw.mods.fml.common.Mod.EventHandler;
 import cpw.mods.fml.common.Mod.Instance;
 import cpw.mods.fml.common.SidedProxy;
 import cpw.mods.fml.common.event.*;
 import cpw.mods.fml.common.network.NetworkRegistry;
-import cpw.mods.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import cpw.mods.fml.common.registry.GameRegistry;
 import net.minecraft.command.ICommandManager;
 import net.minecraft.command.ServerCommandManager;
 import net.minecraft.item.Item;
 import net.minecraft.server.MinecraftServer;
-import net.minecraftforge.common.config.Configuration;
-import org.apache.logging.log4j.Logger;
+import net.minecraftforge.common.Configuration;
 
-@Mod(modid = BQ_Standard.MODID, name = BQ_Standard.NAME, guiFactory = "bq_standard.handlers.ConfigGuiFactory")
+import java.util.logging.Logger;
+
+@Mod(modid = BQ_Standard.MODID, name = BQ_Standard.NAME)
 public class BQ_Standard
 {
     public static final String MODID = "bq_standard";
@@ -37,26 +36,25 @@ public class BQ_Standard
 	
 	@SidedProxy(clientSide = PROXY + ".ClientProxy", serverSide = PROXY + ".CommonProxy")
 	public static CommonProxy proxy;
-	public SimpleNetworkWrapper network;
 	public static Logger logger;
-	
-	public static Item lootChest = new ItemLootChest();
+
+    // FIXME make configurable
+	public static Item lootChest = new ItemLootChest(8300);
     
-    @EventHandler
+    @Mod.PreInit
     public void preInit(FMLPreInitializationEvent event)
     {
     	logger = event.getModLog();
-    	network = NetworkRegistry.INSTANCE.newSimpleChannel(CHANNEL);
     	
     	ConfigHandler.config = new Configuration(event.getSuggestedConfigurationFile(), true);
     	ConfigHandler.initConfigs();
     	
     	proxy.registerHandlers();
     	
-    	NetworkRegistry.INSTANCE.registerGuiHandler(this, new GuiHandler());
+    	NetworkRegistry.instance().registerGuiHandler(this, new GuiHandler());
     }
     
-    @EventHandler
+    @Mod.Init
     public void init(FMLInitializationEvent event)
     {
     	GameRegistry.registerItem(lootChest, "loot_chest");
@@ -64,7 +62,7 @@ public class BQ_Standard
     	proxy.registerRenderers();
     }
     
-    @EventHandler
+    @Mod.PostInit
     public void postInit(FMLPostInitializationEvent event)
     {
         if(Loader.isModLoaded("betterquesting"))
@@ -75,7 +73,7 @@ public class BQ_Standard
         hasNEI = Loader.isModLoaded("NotEnoughItems");
     }
 	
-	@EventHandler
+	@Mod.ServerStarting
 	public void serverStart(FMLServerStartingEvent event)
 	{
 		MinecraftServer server = event.getServer();
@@ -87,7 +85,7 @@ public class BQ_Standard
 		LootSaveLoad.INSTANCE.LoadLoot(event.getServer());
 	}
 	
-	@EventHandler
+	@Mod.ServerStopped
     public void serverStopped(FMLServerStoppedEvent event)
     {
         LootSaveLoad.INSTANCE.UnloadLoot();

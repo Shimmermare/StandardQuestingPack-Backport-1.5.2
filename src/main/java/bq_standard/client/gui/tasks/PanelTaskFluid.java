@@ -1,6 +1,7 @@
 package bq_standard.client.gui.tasks;
 
 import betterquesting.api.api.QuestingAPI;
+import betterquesting.api.misc.ICallback;
 import betterquesting.api2.client.gui.misc.*;
 import betterquesting.api2.client.gui.panels.CanvasEmpty;
 import betterquesting.api2.client.gui.panels.bars.PanelVScrollBar;
@@ -9,13 +10,14 @@ import betterquesting.api2.client.gui.panels.content.PanelTextBox;
 import betterquesting.api2.client.gui.panels.lists.CanvasScrolling;
 import betterquesting.api2.client.gui.themes.presets.PresetColor;
 import betterquesting.api2.utils.QuestTranslation;
+import betterquesting.backport.LiquidUtils;
 import bq_standard.core.BQ_Standard;
 import bq_standard.tasks.TaskFluid;
 import codechicken.nei.recipe.GuiCraftingRecipe;
 import cpw.mods.fml.common.Optional.Method;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.EnumChatFormatting;
-import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.liquids.LiquidStack;
 
 import java.util.UUID;
 
@@ -52,7 +54,7 @@ public class PanelTaskFluid extends CanvasEmpty
         
         for(int i = 0; i < task.requiredFluids.size(); i++)
         {
-            FluidStack stack = task.requiredFluids.get(i);
+            LiquidStack stack = task.requiredFluids.get(i);
             
             if(stack == null)
             {
@@ -60,12 +62,17 @@ public class PanelTaskFluid extends CanvasEmpty
             }
     
             PanelFluidSlot slot = new PanelFluidSlot(new GuiRectangle(0, i * 36, 36, 36, 0), -1, stack);
-            if(BQ_Standard.hasNEI) slot.setCallback(this::lookupRecipe);
+            if(BQ_Standard.hasNEI) slot.setCallback(new ICallback<LiquidStack>() {
+                @Override
+                public void setValue(LiquidStack stack) {
+                    lookupRecipe(stack);
+                }
+            });
             cvList.addPanel(slot);
             
             StringBuilder sb = new StringBuilder();
             
-            sb.append(stack.getLocalizedName()).append("\n");
+            sb.append(LiquidUtils.getLocalizedName(stack)).append("\n");
 			sb.append(progress[i]).append("/").append(stack.amount).append("mB\n");
 			
 			if(progress[i] >= stack.amount || isComplete)
@@ -83,7 +90,7 @@ public class PanelTaskFluid extends CanvasEmpty
     }
     
     @Method(modid = "NotEnoughItems")
-    private void lookupRecipe(FluidStack fluid)
+    private void lookupRecipe(LiquidStack fluid)
     {
         GuiCraftingRecipe.openRecipeGui("fluid", fluid);
     }

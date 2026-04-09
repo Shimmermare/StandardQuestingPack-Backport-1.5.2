@@ -1,6 +1,7 @@
 package bq_standard.client.gui.tasks;
 
 import betterquesting.api.api.QuestingAPI;
+import betterquesting.api.misc.ICallback;
 import betterquesting.api.utils.BigItemStack;
 import betterquesting.api2.client.gui.misc.*;
 import betterquesting.api2.client.gui.panels.CanvasEmpty;
@@ -20,8 +21,8 @@ import bq_standard.core.BQ_Standard;
 import bq_standard.tasks.TaskCrafting;
 import codechicken.nei.recipe.GuiCraftingRecipe;
 import cpw.mods.fml.common.Optional.Method;
+import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
-import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumChatFormatting;
 
@@ -49,13 +50,13 @@ public class PanelTaskCrafting extends CanvasEmpty
         IGuiTexture txTick = new GuiTextureColored(PresetIcon.ICON_TICK.getTexture(), new GuiColorStatic(0xFF00FF00));
         IGuiTexture txCross = new GuiTextureColored(PresetIcon.ICON_CROSS.getTexture(), new GuiColorStatic(0xFFFF0000));
         
-        this.addPanel(new PanelGeneric(new GuiRectangle(0, 0, 24, 24, 0), new ItemTexture(new BigItemStack(Blocks.crafting_table))));
+        this.addPanel(new PanelGeneric(new GuiRectangle(0, 0, 24, 24, 0), new ItemTexture(new BigItemStack(Block.workbench))));
         this.addPanel(new PanelGeneric(new GuiRectangle(16, 16, 8, 8, 0), task.allowCraft ? txTick : txCross));
         
-        this.addPanel(new PanelGeneric(new GuiRectangle(32, 0, 24, 24, 0), new ItemTexture(new BigItemStack(Blocks.furnace))));
+        this.addPanel(new PanelGeneric(new GuiRectangle(32, 0, 24, 24, 0), new ItemTexture(new BigItemStack(Block.furnaceIdle))));
         this.addPanel(new PanelGeneric(new GuiRectangle(48, 16, 8, 8, 0), task.allowSmelt ? txTick : txCross));
         
-        this.addPanel(new PanelGeneric(new GuiRectangle(64, 0, 24, 24, 0), new ItemTexture(new BigItemStack(Blocks.anvil))));
+        this.addPanel(new PanelGeneric(new GuiRectangle(64, 0, 24, 24, 0), new ItemTexture(new BigItemStack(Block.anvil))));
         this.addPanel(new PanelGeneric(new GuiRectangle(80, 16, 8, 8, 0), task.allowAnvil ? txTick : txCross));
         
         CanvasScrolling cvList = new CanvasScrolling(new GuiTransform(GuiAlign.FULL_BOX, new GuiPadding(0, 32, 8, 0), 0));
@@ -72,7 +73,12 @@ public class PanelTaskCrafting extends CanvasEmpty
             BigItemStack stack = task.requiredItems.get(i);
     
             PanelItemSlot slot = new PanelItemSlot(new GuiRectangle(0, i * 36, 36, 36, 0), -1, stack, false, true);
-            if(BQ_Standard.hasNEI) slot.setCallback(value -> lookupRecipe(value.getBaseStack()));
+            if(BQ_Standard.hasNEI) slot.setCallback(new ICallback<BigItemStack>() {
+                @Override
+                public void setValue(BigItemStack value) {
+                    lookupRecipe(value.getBaseStack());
+                }
+            });
             cvList.addPanel(slot);
             
             StringBuilder sb = new StringBuilder();

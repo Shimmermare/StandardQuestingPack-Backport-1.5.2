@@ -6,6 +6,7 @@ import betterquesting.api2.client.gui.misc.IGuiRect;
 import betterquesting.api2.client.gui.panels.IGuiPanel;
 import betterquesting.api2.storage.DBEntry;
 import betterquesting.api2.utils.ParticipantInfo;
+import betterquesting.backport.NbtUtils;
 import bq_standard.client.gui.tasks.PanelTaskCheckbox;
 import bq_standard.core.BQ_Standard;
 import bq_standard.tasks.factory.FactoryTaskCheckbox;
@@ -15,8 +16,8 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTTagString;
-import net.minecraft.util.ResourceLocation;
-import org.apache.logging.log4j.Level;
+import betterquesting.backport.ResourceLocation;
+import java.util.logging.Level;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -26,7 +27,7 @@ import java.util.UUID;
 
 public class TaskCheckbox implements ITask
 {
-	private final Set<UUID> completeUsers = new TreeSet<>();
+	private final Set<UUID> completeUsers = new TreeSet<UUID>();
 	
 	@Override
 	public ResourceLocation getFactoryID()
@@ -82,10 +83,10 @@ public class TaskCheckbox implements ITask
 	public NBTTagCompound writeProgressToNBT(NBTTagCompound nbt, @Nullable List<UUID> users)
 	{
 		NBTTagList jArray = new NBTTagList();
-		
-		completeUsers.forEach((uuid) -> {
-		    if(users == null || users.contains(uuid)) jArray.appendTag(new NBTTagString(uuid.toString()));
-		});
+
+        for (UUID uuid : completeUsers) {
+            if(users == null || users.contains(uuid)) jArray.appendTag(new NBTTagString(uuid.toString()));
+        }
 		
 		nbt.setTag("completeUsers", jArray);
 		
@@ -96,15 +97,15 @@ public class TaskCheckbox implements ITask
 	public void readProgressFromNBT(NBTTagCompound json, boolean merge)
 	{
 		if(!merge) completeUsers.clear();
-		NBTTagList cList = json.getTagList("completeUsers", 8);
+		NBTTagList cList = NbtUtils.getTagList(json,"completeUsers", 8);
 		for(int i = 0; i < cList.tagCount(); i++)
 		{
 			try
 			{
-				completeUsers.add(UUID.fromString(cList.getStringTagAt(i)));
+				completeUsers.add(UUID.fromString(NbtUtils.getStringTagAt(cList, i)));
 			} catch(Exception e)
 			{
-				BQ_Standard.logger.log(Level.ERROR, "Unable to load UUID for task", e);
+				BQ_Standard.logger.log(Level.SEVERE, "Unable to load UUID for task", e);
 			}
 		}
 	}

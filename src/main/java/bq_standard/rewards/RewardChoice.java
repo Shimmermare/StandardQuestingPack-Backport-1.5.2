@@ -8,6 +8,7 @@ import betterquesting.api.utils.JsonHelper;
 import betterquesting.api2.client.gui.misc.IGuiRect;
 import betterquesting.api2.client.gui.panels.IGuiPanel;
 import betterquesting.api2.storage.DBEntry;
+import betterquesting.backport.NbtUtils;
 import bq_standard.NBTReplaceUtil;
 import bq_standard.client.gui.rewards.PanelRewardChoice;
 import bq_standard.core.BQ_Standard;
@@ -19,8 +20,8 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.util.ResourceLocation;
-import org.apache.logging.log4j.Level;
+import betterquesting.backport.ResourceLocation;
+import java.util.logging.Level;
 
 import java.util.*;
 
@@ -30,8 +31,8 @@ public class RewardChoice implements IReward
 	 * The selected reward index to be claimed.<br>
 	 * Should only ever be used client side. NEVER onHit server
 	 */
-	public final List<BigItemStack> choices = new ArrayList<>();
-	private final TreeMap<UUID,Integer> selected = new TreeMap<>();
+	public final List<BigItemStack> choices = new ArrayList<BigItemStack>();
+	private final TreeMap<UUID,Integer> selected = new TreeMap<UUID,Integer>();
 	
 	@Override
 	public ResourceLocation getFactoryID()
@@ -86,7 +87,7 @@ public class RewardChoice implements IReward
 		
 		if(tmp < 0 || tmp >= choices.size())
 		{
-			BQ_Standard.logger.log(Level.ERROR, "Choice reward was forcibly claimed with invalid choice", new IllegalStateException());
+			BQ_Standard.logger.log(Level.SEVERE, "Choice reward was forcibly claimed with invalid choice", new IllegalStateException());
 			return;
 		}
 		
@@ -95,7 +96,7 @@ public class RewardChoice implements IReward
 		
 		if(stack == null || stack.stackSize <= 0)
 		{
-			BQ_Standard.logger.log(Level.WARN, "Claimed reward choice was null or was 0 in size!");
+			BQ_Standard.logger.log(Level.WARNING, "Claimed reward choice was null or was 0 in size!");
 			return;
 		}
 		
@@ -118,10 +119,10 @@ public class RewardChoice implements IReward
 	public void readFromNBT(NBTTagCompound nbt)
 	{
 		choices.clear();
-		NBTTagList cList = nbt.getTagList("choices", 10);
+		NBTTagList cList = NbtUtils.getTagList(nbt,"choices", 10);
 		for(int i = 0; i < cList.tagCount(); i++)
 		{
-			choices.add(JsonHelper.JsonToItemStack(cList.getCompoundTagAt(i)));
+			choices.add(JsonHelper.JsonToItemStack(NbtUtils.getCompoundTagAt(cList, i)));
 		}
 	}
 

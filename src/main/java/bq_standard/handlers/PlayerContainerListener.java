@@ -19,7 +19,7 @@ import java.util.UUID;
 
 public class PlayerContainerListener implements ICrafting
 {
-    private static final HashMap<UUID, PlayerContainerListener> LISTEN_MAP = new HashMap<>();
+    private static final HashMap<UUID, PlayerContainerListener> LISTEN_MAP = new HashMap<UUID, PlayerContainerListener>();
     
     static void refreshListener(@Nonnull EntityPlayer player)
     {

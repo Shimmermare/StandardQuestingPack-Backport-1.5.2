@@ -5,6 +5,7 @@ import betterquesting.api.utils.JsonHelper;
 import betterquesting.api2.storage.DBEntry;
 import betterquesting.api2.storage.INBTSaveLoad;
 import betterquesting.api2.storage.SimpleDatabase;
+import betterquesting.backport.NbtUtils;
 import bq_standard.rewards.loot.LootGroup.LootEntry;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -58,13 +59,13 @@ public class LootGroup extends SimpleDatabase<LootEntry> implements INBTSaveLoad
 		weight = Math.max(tag.getInteger("weight"), 1);
 		
 		// Old entries that were never given IDs
-		List<LootEntry> legacyEntry = new ArrayList<>();
+		List<LootEntry> legacyEntry = new ArrayList<LootEntry>();
 		
-		NBTTagList jRew = tag.getTagList("rewards", 10);
+		NBTTagList jRew = NbtUtils.getTagList(tag,"rewards", 10);
 		for(int i = 0; i < jRew.tagCount(); i++)
 		{
-			NBTTagCompound entry = jRew.getCompoundTagAt(i);
-			int id = entry.hasKey("ID", 99) ? entry.getInteger("ID") : -1;
+			NBTTagCompound entry = NbtUtils.getCompoundTagAt(jRew, i);
+			int id = NbtUtils.hasKey(entry,"ID", 99) ? entry.getInteger("ID") : -1;
 			
 			LootEntry loot = new LootEntry();
 			loot.readFromNBT(entry);
@@ -107,7 +108,7 @@ public class LootGroup extends SimpleDatabase<LootEntry> implements INBTSaveLoad
 	public static class LootEntry implements INBTSaveLoad<NBTTagCompound>
 	{
 		public int weight = 1;
-		public final List<BigItemStack> items = new ArrayList<>();
+		public final List<BigItemStack> items = new ArrayList<BigItemStack>();
 		
 		@Override
 		public void readFromNBT(NBTTagCompound json)
@@ -116,10 +117,10 @@ public class LootGroup extends SimpleDatabase<LootEntry> implements INBTSaveLoad
 			weight = Math.max(1, weight);
 			
 			items.clear();
-			NBTTagList jItm = json.getTagList("items", 10);
+			NBTTagList jItm = NbtUtils.getTagList(json,"items", 10);
 			for(int i = 0; i < jItm.tagCount(); i++)
 			{
-				items.add(JsonHelper.JsonToItemStack(jItm.getCompoundTagAt(i)));
+				items.add(JsonHelper.JsonToItemStack(NbtUtils.getCompoundTagAt(jItm, i)));
 			}
 		}
 		

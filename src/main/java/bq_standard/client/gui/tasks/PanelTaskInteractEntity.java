@@ -23,6 +23,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 
 import java.util.UUID;
+import java.util.concurrent.Callable;
 
 public class PanelTaskInteractEntity extends CanvasEmpty
 {
@@ -70,6 +71,16 @@ public class PanelTaskInteractEntity extends CanvasEmpty
             target = null;
         }
         
-        if(target != null) this.addPanel(new PanelEntityPreview(new GuiTransform(GuiAlign.FULL_BOX, new GuiPadding(48, 0, 0, 0), 0), target).setRotationDriven(new ValueFuncIO<>(() -> 15F), new ValueFuncIO<>(() -> (float)(Minecraft.getSystemTime()%30000L / 30000D * 360D))));
+        if(target != null) this.addPanel(new PanelEntityPreview(new GuiTransform(GuiAlign.FULL_BOX, new GuiPadding(48, 0, 0, 0), 0), target).setRotationDriven(new ValueFuncIO<Float>(new Callable<Float>() {
+            @Override
+            public Float call() throws Exception {
+                return  15F;
+            }
+        }), new ValueFuncIO<Float>(new Callable<Float>() {
+            @Override
+            public Float call() throws Exception {
+                return (float)(Minecraft.getSystemTime()%30000L / 30000D * 360D);
+            }
+        })));
     }
 }

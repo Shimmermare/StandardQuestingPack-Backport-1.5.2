@@ -4,7 +4,7 @@ import betterquesting.api.utils.JsonHelper;
 import betterquesting.api.utils.NBTConverter;
 import bq_standard.core.BQ_Standard;
 import bq_standard.rewards.loot.LootRegistry;
-import com.google.gson.JsonObject;
+import betterquesting.shadow.com.google.gson.JsonObject;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
 

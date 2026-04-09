@@ -1,6 +1,7 @@
 package bq_standard.client.gui.rewards;
 
 import betterquesting.api.api.QuestingAPI;
+import betterquesting.api.misc.ICallback;
 import betterquesting.api.questing.IQuest;
 import betterquesting.api.utils.BigItemStack;
 import betterquesting.api2.client.gui.misc.*;
@@ -60,7 +61,12 @@ public class PanelRewardChoice extends CanvasEmpty
             cvList.addPanel(new PanelTextBox(new GuiRectangle(22, i * 18 + 4, listWidth - 22, 14, 0), stack.stackSize + " " + stack.getBaseStack().getDisplayName()).setColor(PresetColor.TEXT_MAIN.getColor()));
             
             final int sID = i;
-            is.setCallback(value -> NetRewardChoice.requestChoice(qID, rID, sID));
+            is.setCallback(new ICallback<BigItemStack>() {
+                @Override
+                public void setValue(BigItemStack value) {
+                    NetRewardChoice.requestChoice(qID, rID, sID);
+                }
+            });
         }
     }
 }
