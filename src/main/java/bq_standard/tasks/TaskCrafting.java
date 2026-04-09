@@ -34,7 +34,8 @@ public class TaskCrafting implements ITask
 	public final TreeMap<UUID, int[]> userProgress = new TreeMap<UUID, int[]>();
 	public boolean partialMatch = true;
 	public boolean ignoreNBT = false;
-	public boolean allowAnvil = false;
+    // FIXME: Disabled because to detect anvil crafting a coremod is needed
+	public final boolean allowAnvil = false;
 	public boolean allowSmelt = true;
 	public boolean allowCraft = true;
 	
@@ -134,7 +135,7 @@ public class TaskCrafting implements ITask
 		nbt.setBoolean("ignoreNBT", ignoreNBT);
 		nbt.setBoolean("allowCraft", allowCraft);
 		nbt.setBoolean("allowSmelt", allowSmelt);
-		nbt.setBoolean("allowAnvil", allowAnvil);
+		//nbt.setBoolean("allowAnvil", allowAnvil);
 		
 		NBTTagList itemArray = new NBTTagList();
 		for(BigItemStack stack : this.requiredItems)
@@ -153,7 +154,7 @@ public class TaskCrafting implements ITask
 		ignoreNBT = nbt.getBoolean("ignoreNBT");
 		if(nbt.hasKey("allowCraft")) allowCraft = nbt.getBoolean("allowCraft");
 		if(nbt.hasKey("allowSmelt")) allowSmelt = nbt.getBoolean("allowSmelt");
-		if(nbt.hasKey("allowAnvil")) allowAnvil = nbt.getBoolean("allowAnvil");
+		//if(nbt.hasKey("allowAnvil")) allowAnvil = nbt.getBoolean("allowAnvil");
 		
 		requiredItems.clear();
 		NBTTagList iList = NbtUtils.getTagList(nbt,"requiredItems", 10);

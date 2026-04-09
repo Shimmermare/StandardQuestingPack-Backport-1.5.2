@@ -10,3 +10,4 @@ Contains all the basic tasks, rewards, importers and themes for the Better Quest
 ### Unavailable features
 - Mod configuration hot reload and editing in GUI.
 - Removed importers from FTB Quests and HQM (obviously).
+- Anvil crafting tasks.

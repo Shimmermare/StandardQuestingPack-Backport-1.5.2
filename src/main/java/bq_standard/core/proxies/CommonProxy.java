@@ -8,13 +8,17 @@ import betterquesting.api2.registry.IFactoryData;
 import betterquesting.api2.registry.IRegistry;
 import bq_standard.core.BQ_Standard;
 import bq_standard.handlers.BQSCraftingHandler;
+import bq_standard.handlers.BQSPlayerTracker;
 import bq_standard.handlers.EventHandler;
+import bq_standard.handlers.ServerTaskExecutor;
 import bq_standard.network.handlers.*;
 import bq_standard.rewards.factory.*;
 import bq_standard.rewards.loot.LootRegistry;
 import bq_standard.tasks.factory.*;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.registry.GameRegistry;
+import cpw.mods.fml.common.registry.TickRegistry;
+import cpw.mods.fml.relauncher.Side;
 import net.minecraft.item.crafting.CraftingManager;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.MinecraftForge;
@@ -31,6 +35,8 @@ public class CommonProxy
 		MinecraftForge.EVENT_BUS.register(LootRegistry.INSTANCE);
 		MinecraftForge.EVENT_BUS.register(new EventHandler());
         GameRegistry.registerCraftingHandler(new BQSCraftingHandler());
+        GameRegistry.registerPlayerTracker(new BQSPlayerTracker());
+        TickRegistry.registerTickHandler(new ServerTaskExecutor(), Side.SERVER);
 	}
 	
 	public void registerRenderers()

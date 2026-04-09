@@ -9,6 +9,7 @@ import betterquesting.api2.storage.DBEntry;
 import bq_standard.AdminExecute;
 import bq_standard.client.gui.rewards.PanelRewardCommand;
 import bq_standard.handlers.EventHandler;
+import bq_standard.handlers.ServerTaskExecutor;
 import bq_standard.rewards.factory.FactoryRewardCommand;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.command.ICommandSender;
@@ -55,7 +56,7 @@ public class RewardCommand implements IReward
 		
 		if(viaPlayer)
 		{
-			EventHandler.scheduleServerTask(new Callable<Integer>() {
+			ServerTaskExecutor.scheduleServerTask(new Callable<Integer>() {
                 @Override
                 public Integer call() throws Exception {
                     return server.getCommandManager().executeCommand(new AdminExecute(player), finCom);
@@ -64,8 +65,8 @@ public class RewardCommand implements IReward
 		} else
 		{
 			final RewardCommandSender cmdSender = new RewardCommandSender((int)player.posX, (int)player.posY, (int)player.posZ);
-			
-			EventHandler.scheduleServerTask(new Callable<Integer>() {
+
+            ServerTaskExecutor.scheduleServerTask(new Callable<Integer>() {
                 @Override
                 public Integer call() throws Exception {
                     return server.getCommandManager().executeCommand(cmdSender, finCom);

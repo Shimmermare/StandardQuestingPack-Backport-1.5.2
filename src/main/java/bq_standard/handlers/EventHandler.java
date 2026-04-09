@@ -94,22 +94,22 @@ public class EventHandler
 		}
     }
 
-    // FIXME idk how to replace yet
-	@SubscribeEvent(priority = EventPriority.LOWEST)
-	public void onItemAnvil(AnvilRepairEvent event) // Somehow actually works as intended unlike other crafting methods
-	{
-		if(event.entityPlayer == null || event.entityPlayer.worldObj.isRemote) return;
-
-        ParticipantInfo pInfo = new ParticipantInfo(event.entityPlayer);
-
-		for(DBEntry<IQuest> entry : QuestingAPI.getAPI(ApiReference.QUEST_DB).bulkLookup(pInfo.getSharedQuests()))
-		{
-		    for(DBEntry<ITask> task : entry.getValue().getTasks().getEntries())
-            {
-                if(task.getValue() instanceof TaskCrafting) ((TaskCrafting)task.getValue()).onItemAnvil(pInfo, entry, event.output.copy());
-            }
-		}
-	}
+    // FIXME idk how to replace yet, anvil crafting is disabled
+	//@SubscribeEvent(priority = EventPriority.LOWEST)
+	//public void onItemAnvil(AnvilRepairEvent event) // Somehow actually works as intended unlike other crafting methods
+	//{
+	//	if(event.entityPlayer == null || event.entityPlayer.worldObj.isRemote) return;
+//
+    //    ParticipantInfo pInfo = new ParticipantInfo(event.entityPlayer);
+//
+	//	for(DBEntry<IQuest> entry : QuestingAPI.getAPI(ApiReference.QUEST_DB).bulkLookup(pInfo.getSharedQuests()))
+	//	{
+	//	    for(DBEntry<ITask> task : entry.getValue().getTasks().getEntries())
+    //        {
+    //            if(task.getValue() instanceof TaskCrafting) ((TaskCrafting)task.getValue()).onItemAnvil(pInfo, entry, event.output.copy());
+    //        }
+	//	}
+	//}
 
 	@ForgeSubscribe(priority = EventPriority.LOWEST)
 	public void onEntityKilled(LivingDeathEvent event)
@@ -199,54 +199,12 @@ public class EventHandler
 		PlayerContainerListener.refreshListener((EntityPlayer)event.entity);
     }
 
-    // FIXME replace with IPlayerTracker
-	@SubscribeEvent
-    public void onPlayerJoin(PlayerLoggedInEvent event)
-    {
-		if(!event.player.worldObj.isRemote && event.player instanceof EntityPlayerMP)
-		{
-            NetLootSync.sendSync((EntityPlayerMP)event.player);
-		}
-    }
-
 	@ForgeSubscribe
     public void onWorldSave(WorldEvent.Save event)
     {
         if(!event.world.isRemote && LootSaveLoad.INSTANCE.worldDir != null && event.world.provider.dimensionId == 0)
         {
             LootSaveLoad.INSTANCE.SaveLoot();
-        }
-    }
-
-	private static final ArrayDeque<FutureTask> serverTasks = new ArrayDeque<FutureTask>();
-	private static Thread serverThread = null;
-
-    // FIXME move out to ITickHandler
-	// NOTE: This is slightly different to the version in the base mod. This one will not immediately run tasks even if it's from the same thread.
-    public static <T> ListenableFuture<T> scheduleServerTask(Callable<T> task)
-    {
-        if (task == null) {
-            throw new NullPointerException("task cannot be null");
-        }
-
-        ListenableFutureTask<T> listenablefuturetask = ListenableFutureTask.create(task);
-
-        synchronized (serverTasks)
-        {
-            serverTasks.add(listenablefuturetask);
-            return listenablefuturetask;
-        }
-    }
-
-	@SubscribeEvent
-    public void onServerTick(ServerTickEvent event)
-    {
-        if(event.phase != Phase.START) return;
-        if(serverThread == null) serverThread = Thread.currentThread();
-
-        synchronized(serverTasks)
-        {
-            while(!serverTasks.isEmpty()) serverTasks.poll().run();
         }
     }
 }
