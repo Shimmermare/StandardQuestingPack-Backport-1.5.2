@@ -8,7 +8,6 @@ import betterquesting.api.questing.IQuest;
 import betterquesting.api.questing.tasks.ITask;
 import betterquesting.api2.storage.DBEntry;
 import betterquesting.api2.utils.ParticipantInfo;
-import bq_standard.core.BQ_Standard;
 import bq_standard.network.handlers.NetLootSync;
 import bq_standard.tasks.*;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -91,51 +90,6 @@ public class EventHandler
             }
 		}
     }
-
-    // FIXME move to ICraftingHandler
-	@SubscribeEvent(priority = EventPriority.LOWEST)
-	public void onItemCrafted(ItemCraftedEvent event)
-	{
-		if(event.player == null || event.player.worldObj.isRemote) return;
-        
-        ParticipantInfo pInfo = new ParticipantInfo(event.player);
-        
-        ItemStack refStack = event.crafting.copy();
-        
-        if(refStack.stackSize <= 0 && event.craftMatrix instanceof InventoryCrafting) // Hack for broken-ass shift clicking reporting empty stacks
-        {
-            ItemStack result = CraftingManager.getInstance().findMatchingRecipe((InventoryCrafting)event.craftMatrix, event.player.worldObj);
-            if(result != null) refStack.stackSize = result.stackSize;
-        }
-		
-		for(DBEntry<IQuest> entry : QuestingAPI.getAPI(ApiReference.QUEST_DB).bulkLookup(pInfo.getSharedQuests()))
-		{
-		    for(DBEntry<ITask> task : entry.getValue().getTasks().getEntries())
-            {
-                if(task.getValue() instanceof TaskCrafting) ((TaskCrafting)task.getValue()).onItemCraft(pInfo, entry, refStack);
-            }
-		}
-	}
-
-    // FIXME move to ICraftingHandler
-	@SubscribeEvent(priority = EventPriority.LOWEST)
-	public void onItemSmelted(ItemSmeltedEvent event) // This event is even more busted than crafting when shift clicking (only ever reports 2 empty stacks regardless of actual amount)
-	{
-		if(event.player == null || event.player.worldObj.isRemote) return;
-		
-        ParticipantInfo pInfo = new ParticipantInfo(event.player);
-		
-		ItemStack refStack = event.smelting.copy();
-		if(refStack.stackSize <= 0) refStack.stackSize = 1; // Doesn't really fix much but it's better than nothing I suppose
-		
-		for(DBEntry<IQuest> entry : QuestingAPI.getAPI(ApiReference.QUEST_DB).bulkLookup(pInfo.getSharedQuests()))
-		{
-		    for(DBEntry<ITask> task : entry.getValue().getTasks().getEntries())
-            {
-                if(task.getValue() instanceof TaskCrafting) ((TaskCrafting)task.getValue()).onItemSmelt(pInfo, entry, refStack);
-            }
-		}
-	}
 
     // FIXME idk how to replace yet
 	@SubscribeEvent(priority = EventPriority.LOWEST)

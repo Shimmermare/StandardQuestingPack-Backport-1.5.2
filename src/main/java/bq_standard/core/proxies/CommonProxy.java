@@ -7,12 +7,15 @@ import betterquesting.api.questing.tasks.ITask;
 import betterquesting.api2.registry.IFactoryData;
 import betterquesting.api2.registry.IRegistry;
 import bq_standard.core.BQ_Standard;
+import bq_standard.handlers.BQSCraftingHandler;
 import bq_standard.handlers.EventHandler;
 import bq_standard.network.handlers.*;
 import bq_standard.rewards.factory.*;
 import bq_standard.rewards.loot.LootRegistry;
 import bq_standard.tasks.factory.*;
 import cpw.mods.fml.common.FMLCommonHandler;
+import cpw.mods.fml.common.registry.GameRegistry;
+import net.minecraft.item.crafting.CraftingManager;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.MinecraftForge;
 
@@ -27,6 +30,7 @@ public class CommonProxy
 	{
 		MinecraftForge.EVENT_BUS.register(LootRegistry.INSTANCE);
 		MinecraftForge.EVENT_BUS.register(new EventHandler());
+        GameRegistry.registerCraftingHandler(new BQSCraftingHandler());
 	}
 	
 	public void registerRenderers()
