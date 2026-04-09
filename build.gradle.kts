@@ -30,11 +30,6 @@ dependencies {
     compileOnly(libs.jsr305)
 
     modImplementation(files("libs/BetterQuesting-3.0.328-dev.jar"))
-
-    // FIXME add deps
-    //compile "codechicken:NotEnoughItems:1.7.10-1.0.5.120:dev"
-    //compile "codechicken:CodeChickenLib:1.7.10-1.1.3.140:dev"
-    //compile "codechicken:CodeChickenCore:1.7.10-1.0.7.47:dev"
 }
 
 java {

@@ -18,12 +18,10 @@ import betterquesting.api2.client.gui.themes.presets.PresetColor;
 import betterquesting.api2.client.gui.themes.presets.PresetIcon;
 import betterquesting.api2.utils.QuestTranslation;
 import bq_standard.core.BQ_Standard;
+import bq_standard.deps.NeiWrapper;
 import bq_standard.tasks.TaskCrafting;
-import codechicken.nei.recipe.GuiCraftingRecipe;
-import cpw.mods.fml.common.Optional.Method;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
-import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumChatFormatting;
 
 import java.util.UUID;
@@ -76,7 +74,7 @@ public class PanelTaskCrafting extends CanvasEmpty
             if(BQ_Standard.hasNEI) slot.setCallback(new ICallback<BigItemStack>() {
                 @Override
                 public void setValue(BigItemStack value) {
-                    lookupRecipe(value.getBaseStack());
+                    NeiWrapper.lookupRecipe(value.getBaseStack());
                 }
             });
             cvList.addPanel(slot);
@@ -101,11 +99,5 @@ public class PanelTaskCrafting extends CanvasEmpty
 			text.setColor(PresetColor.TEXT_MAIN.getColor());
 			cvList.addPanel(text);
         }
-    }
-    
-    @Method(modid = "NotEnoughItems")
-    private void lookupRecipe(ItemStack stack)
-    {
-        GuiCraftingRecipe.openRecipeGui("item", stack);
     }
 }

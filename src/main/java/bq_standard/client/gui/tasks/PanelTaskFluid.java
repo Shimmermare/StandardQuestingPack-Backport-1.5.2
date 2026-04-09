@@ -12,9 +12,8 @@ import betterquesting.api2.client.gui.themes.presets.PresetColor;
 import betterquesting.api2.utils.QuestTranslation;
 import betterquesting.backport.LiquidUtils;
 import bq_standard.core.BQ_Standard;
+import bq_standard.deps.NeiWrapper;
 import bq_standard.tasks.TaskFluid;
-import codechicken.nei.recipe.GuiCraftingRecipe;
-import cpw.mods.fml.common.Optional.Method;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.liquids.LiquidStack;
@@ -65,7 +64,7 @@ public class PanelTaskFluid extends CanvasEmpty
             if(BQ_Standard.hasNEI) slot.setCallback(new ICallback<LiquidStack>() {
                 @Override
                 public void setValue(LiquidStack stack) {
-                    lookupRecipe(stack);
+                    NeiWrapper.lookupRecipe(stack);
                 }
             });
             cvList.addPanel(slot);
@@ -87,11 +86,5 @@ public class PanelTaskFluid extends CanvasEmpty
 			text.setColor(PresetColor.TEXT_MAIN.getColor());
 			cvList.addPanel(text);
         }
-    }
-    
-    @Method(modid = "NotEnoughItems")
-    private void lookupRecipe(LiquidStack fluid)
-    {
-        GuiCraftingRecipe.openRecipeGui("fluid", fluid);
     }
 }
