@@ -1,0 +1,17 @@
+[versions]
+voldeloom = "2.4-SNAPSHOT"
+minecraft = "1.5.2"
+forge = "1.5.2-7.8.1.738"
+jsr305 = "3.0.2"
+gson = "2.8.9"
+shadow = "7.1.2"
+
+[plugins]
+voldeloom = { id = "agency.highlysuspect.voldeloom", version.ref = "voldeloom" }
+shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow" }
+
+[libraries]
+minecraft = { module = "com.mojang:minecraft", version.ref = "minecraft" }
+forge = { module = "net.minecraftforge:forge", version.ref = "forge" }
+jsr305 = { module = "com.google.code.findbugs:jsr305", version.ref = "jsr305" }
+gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
