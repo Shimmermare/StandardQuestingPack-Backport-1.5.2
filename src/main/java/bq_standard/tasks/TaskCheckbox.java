@@ -85,7 +85,7 @@ public class TaskCheckbox implements ITask
 		NBTTagList jArray = new NBTTagList();
 
         for (UUID uuid : completeUsers) {
-            if(users == null || users.contains(uuid)) jArray.appendTag(new NBTTagString(uuid.toString()));
+            if(users == null || users.contains(uuid)) jArray.appendTag(new NBTTagString(null, uuid.toString()));
         }
 		
 		nbt.setTag("completeUsers", jArray);

@@ -13,6 +13,7 @@ import bq_standard.rewards.loot.LootRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.block.Block;
+import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -36,6 +37,11 @@ public class ItemLootChest extends Item
 		this.setUnlocalizedName("bq_standard.loot_chest");
 		this.setCreativeTab(QuestingAPI.getAPI(ApiReference.CREATIVE_TAB));
 	}
+
+    @Override
+    public void registerIcons(IconRegister par1IconRegister) {
+        this.itemIcon = par1IconRegister.registerIcon("bq_standard:loot_chest");
+    }
 
     /**
      * Called whenever this item is equipped and the right mouse button is pressed. Args: itemStack, world, entityPlayer

@@ -333,7 +333,7 @@ public class TaskFluid implements ITaskInventory, IFluidTask, IItemTask
 		if(users != null)
         {
             for (UUID uuid : users) {
-                if(completeUsers.contains(uuid)) jArray.appendTag(new NBTTagString(uuid.toString()));
+                if(completeUsers.contains(uuid)) jArray.appendTag(new NBTTagString(null, uuid.toString()));
 
                 int[] data = userProgress.get(uuid);
                 if(data != null)
@@ -349,7 +349,7 @@ public class TaskFluid implements ITaskInventory, IFluidTask, IItemTask
         } else
         {
             for (UUID uuid : completeUsers) {
-                jArray.appendTag(new NBTTagString(uuid.toString()));
+                jArray.appendTag(new NBTTagString(null, uuid.toString()));
             }
 
             for (Map.Entry<UUID, int[]> entry : userProgress.entrySet()) {

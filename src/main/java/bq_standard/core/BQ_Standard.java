@@ -13,12 +13,17 @@ import cpw.mods.fml.common.SidedProxy;
 import cpw.mods.fml.common.event.*;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
+import cpw.mods.fml.common.registry.LanguageRegistry;
 import net.minecraft.command.ICommandManager;
 import net.minecraft.command.ServerCommandManager;
 import net.minecraft.item.Item;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.StringTranslate;
 import net.minecraftforge.common.Configuration;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 @Mod(modid = BQ_Standard.MODID, name = BQ_Standard.NAME)
@@ -52,6 +57,8 @@ public class BQ_Standard
     	proxy.registerHandlers();
     	
     	NetworkRegistry.instance().registerGuiHandler(this, new GuiHandler());
+
+        loadLocalizations();
     }
     
     @Mod.Init
@@ -89,5 +96,21 @@ public class BQ_Standard
     public void serverStopped(FMLServerStoppedEvent event)
     {
         LootSaveLoad.INSTANCE.UnloadLoot();
+    }
+
+
+    private void loadLocalizations() {
+        @SuppressWarnings("unchecked")
+        Map<String, String> languages = StringTranslate.getInstance().getLanguageList();
+        List<String> loaded = new ArrayList<String>();
+        for (Map.Entry<String, String> entry : languages.entrySet()) {
+            String lang = entry.getKey();
+            String file = "/mods/bq_standard/lang/" + lang + ".lang";
+            if (this.getClass().getResource(file) != null) {
+                LanguageRegistry.instance().loadLocalization(file, lang, false);
+                loaded.add(lang);
+            }
+        }
+        logger.info("Loaded localizations: " + loaded);
     }
 }

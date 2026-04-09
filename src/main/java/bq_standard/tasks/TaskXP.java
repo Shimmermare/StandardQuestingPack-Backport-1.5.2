@@ -174,7 +174,7 @@ public class TaskXP implements ITaskTickable
 		if(users != null)
         {
             for (UUID uuid : users) {
-                if(completeUsers.contains(uuid)) jArray.appendTag(new NBTTagString(uuid.toString()));
+                if(completeUsers.contains(uuid)) jArray.appendTag(new NBTTagString(null, uuid.toString()));
 
                 Long data = userProgress.get(uuid);
                 if(data != null)
@@ -188,7 +188,7 @@ public class TaskXP implements ITaskTickable
         } else
         {
             for (UUID uuid : completeUsers) {
-                jArray.appendTag(new NBTTagString(uuid.toString()));
+                jArray.appendTag(new NBTTagString(null, uuid.toString()));
             }
 
             for (Map.Entry<UUID, Long> entry : userProgress.entrySet()) {

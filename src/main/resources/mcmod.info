@@ -1,7 +1,7 @@
 [
 {
   "modid": "bq_standard",
-  "name": "Standard Expansion",
+  "name":"Standard Expansion Unofficial 1.5.2 port",
   "description": "Contains all the standard tasks, rewards, importers and themes for Better Questing",
   "version": "${version}",
   "mcversion": "${mcversion}",
@@ -11,7 +11,7 @@
   "credits": "Thank you Patreons for all your support <3",
   "logoFile": "title.png",
   "screenshots": [],
-  "useDependencyInformation": true,
+  "useDependencyInformation": "true",
   "requiredMods": ["betterquesting"],
   "dependencies": ["betterquesting", "NotEnoughItems"]
 }

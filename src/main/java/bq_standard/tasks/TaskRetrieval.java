@@ -294,7 +294,7 @@ public class TaskRetrieval implements ITaskInventory, IItemTask
 		if(users != null)
         {
             for (UUID uuid : users) {
-                if(completeUsers.contains(uuid)) jArray.appendTag(new NBTTagString(uuid.toString()));
+                if(completeUsers.contains(uuid)) jArray.appendTag(new NBTTagString(null, uuid.toString()));
                 
                 int[] data = userProgress.get(uuid);
                 if(data != null)
@@ -310,7 +310,7 @@ public class TaskRetrieval implements ITaskInventory, IItemTask
         } else
         {
             for (UUID uuid : completeUsers) {
-                jArray.appendTag(new NBTTagString(uuid.toString()));
+                jArray.appendTag(new NBTTagString(null, uuid.toString()));
             }
             for (Map.Entry<UUID, int[]> entry : userProgress.entrySet()) {
                 UUID uuid = entry.getKey();

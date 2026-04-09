@@ -1,10 +1,8 @@
 import net.fabricmc.loom.RunConfig
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
     java
     alias(libs.plugins.voldeloom)
-    alias(libs.plugins.shadow)
 }
 
 repositories {

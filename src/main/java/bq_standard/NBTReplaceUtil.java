@@ -40,7 +40,7 @@ public class NBTReplaceUtil
 		} else if(baseTag instanceof NBTTagString)
 		{
 			NBTTagString tString = (NBTTagString)baseTag;
-			return (T)new NBTTagString(tString.data.replaceAll(key, replace));
+			return (T)new NBTTagString(null, tString.data.replaceAll(key, replace));
 		}
 		
 		return baseTag; // Either isn't a string or doesn't contain one
