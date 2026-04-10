@@ -41,8 +41,7 @@ public class BQ_Standard
 	public static CommonProxy proxy;
 	public static Logger logger;
 
-    // FIXME make configurable
-	public static Item lootChest = new ItemLootChest(8300);
+	public static Item lootChest;
     
     @Mod.PreInit
     public void preInit(FMLPreInitializationEvent event)
@@ -51,7 +50,9 @@ public class BQ_Standard
     	
     	ConfigHandler.config = new Configuration(event.getSuggestedConfigurationFile(), true);
     	ConfigHandler.initConfigs();
-    	
+
+        lootChest = new ItemLootChest(BQS_Settings.lootChestItemId);
+
     	proxy.registerHandlers();
     	
     	NetworkRegistry.instance().registerGuiHandler(this, new GuiHandler());

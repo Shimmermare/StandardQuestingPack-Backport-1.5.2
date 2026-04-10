@@ -2,5 +2,5 @@ package bq_standard.core;
 
 public class BQS_Settings
 {
-	public static boolean hideUpdates = false;
+    public static int lootChestItemId = 8300;
 }

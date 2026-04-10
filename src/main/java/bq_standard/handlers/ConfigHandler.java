@@ -3,6 +3,7 @@ package bq_standard.handlers;
 import bq_standard.core.BQS_Settings;
 import bq_standard.core.BQ_Standard;
 import net.minecraftforge.common.Configuration;
+
 import java.util.logging.Level;
 
 public class ConfigHandler
@@ -18,8 +19,8 @@ public class ConfigHandler
 		}
 		
 		config.load();
-		
-		BQS_Settings.hideUpdates = config.get("Hide Updates", Configuration.CATEGORY_GENERAL, false, "Hide update notifications").getBoolean(false);
+
+        BQS_Settings.lootChestItemId = config.getItem("LootChest", BQS_Settings.lootChestItemId).getInt();
 		
 		config.save();
 		
