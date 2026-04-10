@@ -2,11 +2,9 @@ package bq_standard.deps;
 
 import bq_standard.core.BQ_Standard;
 import cpw.mods.fml.common.Loader;
-import cpw.mods.fml.relauncher.ReflectionHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.liquids.LiquidStack;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.logging.Level;
 
@@ -16,15 +14,13 @@ import java.util.logging.Level;
  */
 public class NeiWrapper {
     private static boolean initialized;
+    private static boolean hasNei;
+
     private static Method openRecipeGuiItemStack;
     private static Method openRecipeGuiLiquidStack;
 
-    public void openRecipeGui(String outputId, ItemStack stack) {
-        // noop
-    }
-
-    public void openRecipeGui(String outputId, LiquidStack stack) {
-        // noop
+    public static boolean hasNei() {
+        return hasNei;
     }
 
     public static void lookupRecipe(ItemStack stack) {
@@ -57,6 +53,7 @@ public class NeiWrapper {
             return;
         }
 
+        hasNei = true;
         try {
             Class<?> guiCraftingRecipe = Class.forName("codechicken.nei.recipe.GuiCraftingRecipe");
             openRecipeGuiItemStack = guiCraftingRecipe.getMethod("openRecipeGui", String.class, ItemStack.class);

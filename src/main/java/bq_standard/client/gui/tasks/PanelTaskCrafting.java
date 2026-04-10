@@ -17,7 +17,6 @@ import betterquesting.api2.client.gui.resources.textures.ItemTexture;
 import betterquesting.api2.client.gui.themes.presets.PresetColor;
 import betterquesting.api2.client.gui.themes.presets.PresetIcon;
 import betterquesting.api2.utils.QuestTranslation;
-import bq_standard.core.BQ_Standard;
 import bq_standard.deps.NeiWrapper;
 import bq_standard.tasks.TaskCrafting;
 import net.minecraft.block.Block;
@@ -71,7 +70,7 @@ public class PanelTaskCrafting extends CanvasEmpty
             BigItemStack stack = task.requiredItems.get(i);
     
             PanelItemSlot slot = new PanelItemSlot(new GuiRectangle(0, i * 36, 36, 36, 0), -1, stack, false, true);
-            if(BQ_Standard.hasNEI) slot.setCallback(new ICallback<BigItemStack>() {
+            if(NeiWrapper.hasNei()) slot.setCallback(new ICallback<BigItemStack>() {
                 @Override
                 public void setValue(BigItemStack value) {
                     NeiWrapper.lookupRecipe(value.getBaseStack());

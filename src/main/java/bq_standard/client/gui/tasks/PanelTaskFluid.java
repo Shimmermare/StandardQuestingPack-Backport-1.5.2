@@ -11,7 +11,6 @@ import betterquesting.api2.client.gui.panels.lists.CanvasScrolling;
 import betterquesting.api2.client.gui.themes.presets.PresetColor;
 import betterquesting.api2.utils.QuestTranslation;
 import betterquesting.backport.LiquidUtils;
-import bq_standard.core.BQ_Standard;
 import bq_standard.deps.NeiWrapper;
 import bq_standard.tasks.TaskFluid;
 import net.minecraft.client.Minecraft;
@@ -61,7 +60,7 @@ public class PanelTaskFluid extends CanvasEmpty
             }
     
             PanelFluidSlot slot = new PanelFluidSlot(new GuiRectangle(0, i * 36, 36, 36, 0), -1, stack);
-            if(BQ_Standard.hasNEI) slot.setCallback(new ICallback<LiquidStack>() {
+            if(NeiWrapper.hasNei()) slot.setCallback(new ICallback<LiquidStack>() {
                 @Override
                 public void setValue(LiquidStack stack) {
                     NeiWrapper.lookupRecipe(stack);

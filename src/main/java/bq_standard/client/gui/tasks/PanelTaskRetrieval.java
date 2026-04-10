@@ -2,8 +2,6 @@ package bq_standard.client.gui.tasks;
 
 import betterquesting.api.api.QuestingAPI;
 import betterquesting.api.misc.ICallback;
-import betterquesting.api.properties.NativeProps;
-import betterquesting.api.questing.IQuest;
 import betterquesting.api.utils.BigItemStack;
 import betterquesting.api2.client.gui.misc.*;
 import betterquesting.api2.client.gui.panels.CanvasEmpty;
@@ -13,11 +11,9 @@ import betterquesting.api2.client.gui.panels.content.PanelTextBox;
 import betterquesting.api2.client.gui.panels.lists.CanvasScrolling;
 import betterquesting.api2.client.gui.themes.presets.PresetColor;
 import betterquesting.api2.utils.QuestTranslation;
-import bq_standard.core.BQ_Standard;
 import bq_standard.deps.NeiWrapper;
 import bq_standard.tasks.TaskRetrieval;
 import net.minecraft.client.Minecraft;
-import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumChatFormatting;
 
 import java.util.UUID;
@@ -63,7 +59,7 @@ public class PanelTaskRetrieval extends CanvasEmpty
             }
     
             PanelItemSlot slot = new PanelItemSlot(new GuiRectangle(0, i * 32, 32, 32, 0), -1, stack, false, true);
-            if(BQ_Standard.hasNEI) slot.setCallback(new ICallback<BigItemStack>() {
+            if(NeiWrapper.hasNei()) slot.setCallback(new ICallback<BigItemStack>() {
                 @Override
                 public void setValue(BigItemStack value) {
                     NeiWrapper.lookupRecipe(value.getBaseStack());
