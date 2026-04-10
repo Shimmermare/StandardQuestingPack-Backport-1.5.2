@@ -1,11 +1,11 @@
 [
 {
   "modid": "bq_standard",
-  "name":"Standard Expansion Unofficial 1.5.2 port",
-  "description": "Contains all the standard tasks, rewards, importers and themes for Better Questing",
+  "name":"Standard Expansion Unofficial",
+  "description": "Contains all the standard tasks, rewards, importers and themes for Better Questing.  Please don't bother the original author with questions/requests about this port!",
   "version": "${version}",
   "mcversion": "${mcversion}",
-  "url": "",
+  "url": "https://github.com/Shimmermare/StandardQuestingPack-Backport-1.5.2",
   "updateUrl": "",
   "authorList": ["Funwayguy"],
   "credits": "Thank you Patreons for all your support <3",
