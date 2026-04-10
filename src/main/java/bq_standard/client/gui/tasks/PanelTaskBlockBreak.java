@@ -32,7 +32,7 @@ public class PanelTaskBlockBreak extends CanvasEmpty
         super.initPanel();
         
         UUID uuid = QuestingAPI.getQuestingUUID(Minecraft.getMinecraft().thePlayer);
-        int[] progress = task.getUsersProgress(uuid);
+        int[] progress = task.getUserProgress(uuid);
         boolean isComplete = task.isComplete(uuid);
         
         CanvasScrolling cvList = new CanvasScrolling(new GuiTransform(GuiAlign.FULL_BOX, new GuiPadding(0, 0, 8, 0), 0));

@@ -34,7 +34,7 @@ public class PanelTaskRetrieval extends CanvasEmpty
         super.initPanel();
         
         UUID uuid = QuestingAPI.getQuestingUUID(Minecraft.getMinecraft().thePlayer);
-        int[] progress = task.getUsersProgress(uuid);
+        int[] progress = task.getUserProgress(uuid);
         boolean isComplete = task.isComplete(uuid);
         
         String sCon = (task.consume ? EnumChatFormatting.RED : EnumChatFormatting.GREEN) + QuestTranslation.translate(task.consume ? "gui.yes" : "gui.no");

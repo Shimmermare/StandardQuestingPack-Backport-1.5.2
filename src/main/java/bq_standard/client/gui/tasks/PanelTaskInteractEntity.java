@@ -44,7 +44,7 @@ public class PanelTaskInteractEntity extends CanvasEmpty
         this.addPanel(new PanelGeneric(new GuiTransform(GuiAlign.MID_LEFT, 32, -40, 16, 16, 0), PresetIcon.ICON_RIGHT.getTexture()));
         
         UUID playerID = QuestingAPI.getQuestingUUID(Minecraft.getMinecraft().thePlayer);
-        int prog = task.getUsersProgress(playerID);
+        int prog = task.getUserProgress(playerID);
         this.addPanel(new PanelTextBox(new GuiTransform(GuiAlign.MID_LEFT, 0, -14, 32, 14, 0), prog + "/" + task.required).setAlignment(1).setColor(PresetColor.TEXT_MAIN.getColor()));
         
         this.addPanel(new PanelGeneric(new GuiTransform(GuiAlign.MID_LEFT, 0, 0, 24, 24, 0), BQSTextures.HAND_LEFT.getTexture()));

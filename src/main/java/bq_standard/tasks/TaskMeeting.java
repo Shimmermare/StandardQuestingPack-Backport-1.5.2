@@ -7,9 +7,9 @@ import betterquesting.api2.client.gui.panels.IGuiPanel;
 import betterquesting.api2.storage.DBEntry;
 import betterquesting.api2.utils.ParticipantInfo;
 import betterquesting.backport.NbtUtils;
+import betterquesting.backport.ResourceLocation;
 import bq_standard.client.gui.editors.tasks.GuiEditTaskMeeting;
 import bq_standard.client.gui.tasks.PanelTaskMeeting;
-import bq_standard.core.BQ_Standard;
 import bq_standard.tasks.factory.FactoryTaskMeeting;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -17,19 +17,14 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.nbt.NBTTagString;
-import betterquesting.backport.ResourceLocation;
-import java.util.logging.Level;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 
-public class TaskMeeting implements ITaskTickable
+public class TaskMeeting extends NoProgressTaskBase implements ITaskTickable
 {
-	private final Set<UUID> completeUsers = new TreeSet<UUID>();
-	
 	public String idName = "Villager";
 	public int range = 4;
 	public int amount = 1;
@@ -51,30 +46,6 @@ public class TaskMeeting implements ITaskTickable
 	public String getUnlocalisedName()
 	{
 		return "bq_standard.task.meeting";
-	}
-	
-	@Override
-	public boolean isComplete(UUID uuid)
-	{
-		return completeUsers.contains(uuid);
-	}
-	
-	@Override
-	public void setComplete(UUID uuid)
-	{
-		completeUsers.add(uuid);
-	}
-
-	@Override
-	public void resetUser(@Nullable UUID uuid)
-	{
-	    if(uuid == null)
-        {
-		    completeUsers.clear();
-        } else
-        {
-            completeUsers.remove(uuid);
-        }
 	}
 	
 	@Override
@@ -152,37 +123,6 @@ public class TaskMeeting implements ITaskTickable
 		subtypes = json.getBoolean("subtypes");
 		ignoreNBT = json.getBoolean("ignoreNBT");
 		targetTags = json.getCompoundTag("targetNBT");
-	}
-
-	@Override
-	public NBTTagCompound writeProgressToNBT(NBTTagCompound nbt, List<UUID> users)
-	{
-		NBTTagList jArray = new NBTTagList();
-
-        for (UUID uuid : completeUsers) {
-            if(users == null || users.contains(uuid)) jArray.appendTag(new NBTTagString(null, uuid.toString()));
-        }
-		
-		nbt.setTag("completeUsers", jArray);
-		
-		return nbt;
-	}
-	
-	@Override
-	public void readProgressFromNBT(NBTTagCompound nbt, boolean merge)
-	{
-		if(!merge) completeUsers.clear();
-		NBTTagList cList = NbtUtils.getTagList(nbt,"completeUsers", 8);
-		for(int i = 0; i < cList.tagCount(); i++)
-		{
-			try
-			{
-				completeUsers.add(UUID.fromString(NbtUtils.getStringTagAt(cList, i)));
-			} catch(Exception e)
-			{
-				BQ_Standard.logger.log(Level.SEVERE, "Unable to load UUID for task", e);
-			}
-		}
 	}
 	
 	/**

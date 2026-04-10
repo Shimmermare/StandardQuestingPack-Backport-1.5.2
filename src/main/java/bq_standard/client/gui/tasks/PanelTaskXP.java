@@ -39,7 +39,7 @@ public class PanelTaskXP extends CanvasEmpty
         
         this.addPanel(new PanelGeneric(new GuiTransform(GuiAlign.MID_CENTER, -16, -32, 32, 32, 0), new ItemTexture(new BigItemStack(Item.expBottle))));
         
-		long xp = task.getUsersProgress(QuestingAPI.getQuestingUUID(Minecraft.getMinecraft().thePlayer));
+		int xp = task.getUserProgress(QuestingAPI.getQuestingUUID(Minecraft.getMinecraft().thePlayer));
 		xp = !task.levels? xp : XPHelper.getXPLevel(xp);
 		final float xpPercent = (float)((double)xp/(double)task.amount);
         

@@ -1,14 +1,13 @@
 package bq_standard.tasks;
 
 import betterquesting.api.questing.IQuest;
-import betterquesting.api.questing.tasks.ITask;
 import betterquesting.api.utils.ItemComparison;
 import betterquesting.api2.client.gui.misc.IGuiRect;
 import betterquesting.api2.client.gui.panels.IGuiPanel;
 import betterquesting.api2.storage.DBEntry;
 import betterquesting.api2.utils.ParticipantInfo;
 import betterquesting.api2.utils.Tuple2;
-import betterquesting.backport.NbtUtils;
+import betterquesting.backport.ResourceLocation;
 import bq_standard.client.gui.editors.tasks.GuiEditTaskHunt;
 import bq_standard.client.gui.tasks.PanelTaskHunt;
 import bq_standard.core.BQ_Standard;
@@ -20,20 +19,14 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.nbt.NBTTagString;
 import net.minecraft.util.DamageSource;
-import betterquesting.backport.ResourceLocation;
-import java.util.logging.Level;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 
-public class TaskHunt implements ITask
+public class TaskHunt extends IntProgressTaskBase
 {
-	private final Set<UUID> completeUsers = new TreeSet<UUID>();
-	private final TreeMap<UUID, Integer> userProgress = new TreeMap<UUID, Integer>();
 	public String idName = "Zombie";
 	public String damageType = "";
 	public int required = 1;
@@ -50,18 +43,7 @@ public class TaskHunt implements ITask
 	{
 		return FactoryTaskHunt.INSTANCE.getRegistryName();
 	}
-	
-	@Override
-	public boolean isComplete(UUID uuid)
-	{
-		return completeUsers.contains(uuid);
-	}
-	
-	@Override
-	public void setComplete(UUID uuid)
-	{
-		completeUsers.add(uuid);
-	}
+
 	
 	@Override
 	public String getUnlocalisedName()
@@ -84,7 +66,7 @@ public class TaskHunt implements ITask
 	@SuppressWarnings("unchecked")
 	public void onKilledByPlayer(ParticipantInfo pInfo, DBEntry<IQuest> quest, EntityLiving entity, DamageSource source)
 	{
-		if(damageType.length() > 0 && (source == null || !damageType.equalsIgnoreCase(source.damageType))) return;
+		if(!damageType.isEmpty() && (source == null || !damageType.equalsIgnoreCase(source.damageType))) return;
 		
 		Class<? extends Entity> subject = entity.getClass();
 		Class<? extends Entity> target = (Class<? extends Entity>)EntityList.stringToClassMapping.get(idName);
@@ -141,98 +123,6 @@ public class TaskHunt implements ITask
 		damageType = nbt.getString("damageType");
 	}
 	
-	@Override
-	public void readProgressFromNBT(NBTTagCompound nbt, boolean merge)
-	{
-		if(!merge)
-        {
-            completeUsers.clear();
-            userProgress.clear();
-        }
-		
-		NBTTagList cList = NbtUtils.getTagList(nbt,"completeUsers", 8);
-		for(int i = 0; i < cList.tagCount(); i++)
-		{
-			try
-			{
-				completeUsers.add(UUID.fromString(NbtUtils.getStringTagAt(cList, i)));
-			} catch(Exception e)
-			{
-				BQ_Standard.logger.log(Level.SEVERE, "Unable to load UUID for task", e);
-			}
-		}
-		
-		NBTTagList pList = NbtUtils.getTagList(nbt,"userProgress", 10);
-		for(int n = 0; n < pList.tagCount(); n++)
-		{
-			try
-			{
-                NBTTagCompound pTag = NbtUtils.getCompoundTagAt(pList, n);
-                UUID uuid = UUID.fromString(pTag.getString("uuid"));
-                userProgress.put(uuid, pTag.getInteger("value"));
-			} catch(Exception e)
-			{
-				BQ_Standard.logger.log(Level.SEVERE, "Unable to load user progress for task", e);
-			}
-		}
-	}
-	
-	@Override
-	public NBTTagCompound writeProgressToNBT(NBTTagCompound nbt, @Nullable List<UUID> users)
-	{
-		NBTTagList jArray = new NBTTagList();
-		NBTTagList progArray = new NBTTagList();
-		
-		if(users != null)
-        {
-            for (UUID uuid : users) {
-                if(completeUsers.contains(uuid)) jArray.appendTag(new NBTTagString(null, uuid.toString()));
-
-                Integer data = userProgress.get(uuid);
-                if(data != null)
-                {
-                    NBTTagCompound pJson = new NBTTagCompound();
-                    pJson.setString("uuid", uuid.toString());
-                    pJson.setInteger("value", data);
-                    progArray.appendTag(pJson);
-                }
-            }
-        } else
-        {
-            for (UUID uuid : completeUsers) {
-                jArray.appendTag(new NBTTagString(null, uuid.toString()));
-            }
-
-            for (Map.Entry<UUID, Integer> entry : userProgress.entrySet()) {
-                UUID uuid = entry.getKey();
-                int data = entry.getValue();
-                NBTTagCompound pJson = new NBTTagCompound();
-                pJson.setString("uuid", uuid.toString());
-                pJson.setInteger("value", data);
-                progArray.appendTag(pJson);
-            }
-        }
-		
-		nbt.setTag("completeUsers", jArray);
-		nbt.setTag("userProgress", progArray);
-		
-		return nbt;
-	}
-
-	@Override
-	public void resetUser(@Nullable UUID uuid)
-	{
-	    if(uuid == null)
-        {
-            completeUsers.clear();
-            userProgress.clear();
-        } else
-        {
-            completeUsers.remove(uuid);
-            userProgress.remove(uuid);
-        }
-	}
-	
 	/**
 	 * Returns a new editor screen for this Reward type to edit the given data
 	 */
@@ -249,25 +139,4 @@ public class TaskHunt implements ITask
 	{
 	    return new PanelTaskHunt(rect, this);
 	}
-	
-	private void setUserProgress(UUID uuid, int progress)
-	{
-		userProgress.put(uuid, progress);
-	}
-	
-	public int getUsersProgress(UUID uuid)
-	{
-        Integer n = userProgress.get(uuid);
-        return n == null? 0 : n;
-	}
-	
-	private List<Tuple2<UUID, Integer>> getBulkProgress(@Nonnull List<UUID> uuids)
-    {
-        if(uuids.size() <= 0) return Collections.emptyList();
-        List<Tuple2<UUID, Integer>> list = new ArrayList<Tuple2<UUID, Integer>>();
-        for (UUID key : uuids) {
-            list.add(new Tuple2<UUID, Integer>(key, getUsersProgress(key)));
-        }
-        return list;
-    }
 }

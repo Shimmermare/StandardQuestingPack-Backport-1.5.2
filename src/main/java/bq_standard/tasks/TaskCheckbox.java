@@ -1,12 +1,11 @@
 package bq_standard.tasks;
 
 import betterquesting.api.questing.IQuest;
-import betterquesting.api.questing.tasks.ITask;
 import betterquesting.api2.client.gui.misc.IGuiRect;
 import betterquesting.api2.client.gui.panels.IGuiPanel;
 import betterquesting.api2.storage.DBEntry;
 import betterquesting.api2.utils.ParticipantInfo;
-import betterquesting.backport.NbtUtils;
+import betterquesting.backport.ResourceLocation;
 import bq_standard.client.gui.tasks.PanelTaskCheckbox;
 import bq_standard.core.BQ_Standard;
 import bq_standard.tasks.factory.FactoryTaskCheckbox;
@@ -14,21 +13,9 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.nbt.NBTTagString;
-import betterquesting.backport.ResourceLocation;
-import java.util.logging.Level;
 
-import javax.annotation.Nullable;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.UUID;
-
-public class TaskCheckbox implements ITask
+public class TaskCheckbox extends NoProgressTaskBase
 {
-	private final Set<UUID> completeUsers = new TreeSet<UUID>();
-	
 	@Override
 	public ResourceLocation getFactoryID()
 	{
@@ -40,33 +27,6 @@ public class TaskCheckbox implements ITask
 	{
 		return BQ_Standard.MODID + ".task.checkbox";
 	}
-	
-	@Override
-	public boolean isComplete(UUID uuid)
-	{
-		return completeUsers.contains(uuid);
-	}
-	
-	@Override
-	public void setComplete(UUID uuid)
-	{
-		if(!completeUsers.contains(uuid))
-		{
-			completeUsers.add(uuid);
-		}
-	}
-
-	@Override
-	public void resetUser(@Nullable UUID uuid)
-	{
-	    if(uuid == null)
-        {
-            completeUsers.clear();
-        } else
-        {
-            completeUsers.remove(uuid);
-        }
-	}
 
 	@Override
 	public NBTTagCompound writeToNBT(NBTTagCompound nbt)
@@ -77,37 +37,6 @@ public class TaskCheckbox implements ITask
 	@Override
 	public void readFromNBT(NBTTagCompound nbt)
 	{
-	}
-	
-	@Override
-	public NBTTagCompound writeProgressToNBT(NBTTagCompound nbt, @Nullable List<UUID> users)
-	{
-		NBTTagList jArray = new NBTTagList();
-
-        for (UUID uuid : completeUsers) {
-            if(users == null || users.contains(uuid)) jArray.appendTag(new NBTTagString(null, uuid.toString()));
-        }
-		
-		nbt.setTag("completeUsers", jArray);
-		
-		return nbt;
-	}
-	
-	@Override
-	public void readProgressFromNBT(NBTTagCompound json, boolean merge)
-	{
-		if(!merge) completeUsers.clear();
-		NBTTagList cList = NbtUtils.getTagList(json,"completeUsers", 8);
-		for(int i = 0; i < cList.tagCount(); i++)
-		{
-			try
-			{
-				completeUsers.add(UUID.fromString(NbtUtils.getStringTagAt(cList, i)));
-			} catch(Exception e)
-			{
-				BQ_Standard.logger.log(Level.SEVERE, "Unable to load UUID for task", e);
-			}
-		}
 	}
 
 	@Override

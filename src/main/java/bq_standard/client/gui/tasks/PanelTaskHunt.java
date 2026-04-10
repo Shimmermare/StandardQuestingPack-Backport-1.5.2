@@ -44,7 +44,7 @@ public class PanelTaskHunt extends CanvasEmpty
             target = null;
         }
         
-        int progress = task.getUsersProgress(QuestingAPI.getQuestingUUID(Minecraft.getMinecraft().thePlayer));
+        int progress = task.getUserProgress(QuestingAPI.getQuestingUUID(Minecraft.getMinecraft().thePlayer));
 		String tnm = target != null? target.getTranslatedEntityName() : task.idName;
         
         this.addPanel(new PanelTextBox(new GuiTransform(GuiAlign.TOP_EDGE, new GuiPadding(0, 0, 0, -16), 0), QuestTranslation.translate("bq_standard.gui.kill", tnm) + " " + progress + "/" + task.required).setAlignment(1).setColor(PresetColor.TEXT_MAIN.getColor()));

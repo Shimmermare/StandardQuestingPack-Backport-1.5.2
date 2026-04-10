@@ -6,28 +6,27 @@ import betterquesting.api2.client.gui.panels.IGuiPanel;
 import betterquesting.api2.storage.DBEntry;
 import betterquesting.api2.utils.ParticipantInfo;
 import betterquesting.backport.NbtUtils;
+import betterquesting.backport.ResourceLocation;
 import bq_standard.client.gui.tasks.PanelTaskLocation;
-import bq_standard.core.BQ_Standard;
 import bq_standard.tasks.factory.FactoryTaskLocation;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.nbt.NBTTagString;
-import net.minecraft.util.*;
-import betterquesting.backport.ResourceLocation;
+import net.minecraft.util.EnumMovingObjectType;
+import net.minecraft.util.MathHelper;
+import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.Vec3;
 import net.minecraft.world.WorldProvider;
 import net.minecraftforge.common.DimensionManager;
-import java.util.logging.Level;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.UUID;
 
-public class TaskLocation implements ITaskTickable
+public class TaskLocation extends NoProgressTaskBase implements ITaskTickable
 {
-	private final Set<UUID> completeUsers = new TreeSet<UUID>();
 	public String name = "New Location";
 	public String structure = "";
 	public int biome = -1;
@@ -51,30 +50,6 @@ public class TaskLocation implements ITaskTickable
 	public String getUnlocalisedName()
 	{
 		return "bq_standard.task.location";
-	}
-	
-	@Override
-	public boolean isComplete(UUID uuid)
-	{
-		return completeUsers.contains(uuid);
-	}
-	
-	@Override
-	public void setComplete(UUID uuid)
-	{
-		completeUsers.add(uuid);
-	}
- 
-	@Override
-	public void resetUser(@Nullable UUID uuid)
-	{
-	    if(uuid == null)
-        {
-		    completeUsers.clear();
-        } else
-        {
-            completeUsers.remove(uuid);
-        }
 	}
 	
 	@Override
@@ -172,37 +147,6 @@ public class TaskLocation implements ITaskTickable
 		hideInfo = nbt.getBoolean("hideInfo");
 		invert = nbt.getBoolean("invert") || nbt.getBoolean("invertDistance");
 		taxiCab = nbt.getBoolean("taxiCabDist");
-	}
-	
-	@Override
-	public NBTTagCompound writeProgressToNBT(NBTTagCompound nbt, @Nullable List<UUID> users)
-	{
-		NBTTagList jArray = new NBTTagList();
-
-        for (UUID uuid : completeUsers) {
-            if(users == null || users.contains(uuid)) jArray.appendTag(new NBTTagString(null, uuid.toString()));
-        }
-		
-		nbt.setTag("completeUsers", jArray);
-		
-		return nbt;
-	}
- 
-	@Override
-	public void readProgressFromNBT(NBTTagCompound nbt, boolean merge)
-	{
-		if(!merge) completeUsers.clear();
-		NBTTagList cList = NbtUtils.getTagList(nbt,"completeUsers", 8);
-		for(int i = 0; i < cList.tagCount(); i++)
-		{
-			try
-			{
-				completeUsers.add(UUID.fromString(NbtUtils.getStringTagAt(cList, i)));
-			} catch(Exception e)
-			{
-				BQ_Standard.logger.log(Level.SEVERE, "Unable to load UUID for task", e);
-			}
-		}
 	}
  
 	@Override
